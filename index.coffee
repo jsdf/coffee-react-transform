@@ -1,11 +1,13 @@
 {Parser,compileToCS} = require './csx'
 
+parser = new Parser()
+
 console.log 'pathological case of CSX escape inside CSX tag'
-ast = new Parser().parse '<Person name={window.isLoggedIn ? window.name : \'\'} />'
+ast = parser.parse '<Person name={window.isLoggedIn ? window.name : \'\'} />'
 console.log JSON.stringify(ast, null, 4)
 
 
-ast = new Parser().parse """
+ast = parser.parse """
 # @jsx React.DOM 
 
 HelloWorld = React.createClass({

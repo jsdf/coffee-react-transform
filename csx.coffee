@@ -3,15 +3,6 @@
 {count, starts, compact, last, repeat, invertLiterate,
 locationDataToString,  throwSyntaxError} = require './helpers'
 
-
-# getAttributes = (attributesText) ->
-#   attributesValues = {}
-#   TAG_ATTRIBUTES.lastIndex = 0
-#   while attrMatches = TAG_ATTRIBUTES.exec attributesText
-#     attributesValues[attrMatches[1]] = attrMatches[2] || attrMatches[4] || true
-#   attributesValues
-#   
-
 exports.Parser = class Parser
   astLeafNode: (type, value = null) -> {type, value}
   astBranchNode: (type, value = null) -> {type, value, children:[]}
@@ -24,6 +15,52 @@ exports.Parser = class Parser
   popActiveBranchNode: -> @activeStates.pop()
   addLeafNodeToActiveBranch: (node) ->
     @activeBranchNode().children.push(node)
+
+  # TODO: implement attributes
+  rewriteAttributes: (attributesText) ->
+    unless attributesText.length
+      attributesText = null
+
+    @astBranchNode CSX_ATTRS, attributesText
+
+  # getAttributes = (attributesText) ->
+  #   attributesValues = {}
+  #   TAG_ATTRIBUTES.lastIndex = 0
+  #   while attrMatches = TAG_ATTRIBUTES.exec attributesText
+  #     attributesValues[attrMatches[1]] = attrMatches[2] || attrMatches[4] || true
+  #   attributesValues
+  #   
+
+  clean: (code) ->
+    code = code.slice(1) if code.charCodeAt(0) is BOM
+    code = code.replace(/\r/g, '').replace TRAILING_SPACES, ''
+    if WHITESPACE.test code
+      code = "\n#{code}"
+      @chunkLine--
+    code
+
+  # Returns the line and column number from an offset into the current chunk.
+  #
+  # `offset` is a number of characters into @chunk.
+  getLineAndColumnFromChunk: (offset) ->
+    if offset is 0
+      return [@chunkLine, @chunkColumn]
+
+    if offset >= @chunk.length
+      string = @chunk
+    else
+      string = @chunk[..offset-1]
+
+    lineCount = count string, '\n'
+
+    column = @chunkColumn
+    if lineCount > 0
+      lines = string.split '\n'
+      column = last(lines).length
+    else
+      column += string.length
+
+    [@chunkLine + lineCount, column]
 
   parse: (code, opts = {}) ->
     @ast = @astBranchNode(ROOT) # abstract syntax tree
@@ -46,14 +83,13 @@ exports.Parser = class Parser
       [@chunkLine, @chunkColumn] = @getLineAndColumnFromChunk consumed
 
       i += consumed
-
     
     unless @activeBranchNode() == @ast
       throwSyntaxError \
         "Unexpected EOF: unclosed #{@activeBranchNode().type}",
         first_line: @chunkLine, first_column: @chunkColumn
 
-    @ast
+    @ast # completed ast
 
   csxStart: ->
     return 0 unless match = OPENING_TAG.exec @chunk
@@ -121,44 +157,6 @@ exports.Parser = class Parser
     @newestNode().value += @chunk.charAt 0
     
     return 1
-
-  # TODO: implement attributes
-  rewriteAttributes: (attributesText) ->
-    unless attributesText.length
-      attributesText = null
-
-    @astBranchNode CSX_ATTRS, attributesText
-
-  clean: (code) ->
-    code = code.slice(1) if code.charCodeAt(0) is BOM
-    code = code.replace(/\r/g, '').replace TRAILING_SPACES, ''
-    if WHITESPACE.test code
-      code = "\n#{code}"
-      @chunkLine--
-    code
-
-  # Returns the line and column number from an offset into the current chunk.
-  #
-  # `offset` is a number of characters into @chunk.
-  getLineAndColumnFromChunk: (offset) ->
-    if offset is 0
-      return [@chunkLine, @chunkColumn]
-
-    if offset >= @chunk.length
-      string = @chunk
-    else
-      string = @chunk[..offset-1]
-
-    lineCount = count string, '\n'
-
-    column = @chunkColumn
-    if lineCount > 0
-      lines = string.split '\n'
-      column = last(lines).length
-    else
-      column += string.length
-
-    [@chunkLine + lineCount, column]
 
 exports.compileToCS = (ast) ->
 
