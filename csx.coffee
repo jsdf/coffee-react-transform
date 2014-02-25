@@ -4,10 +4,6 @@
 locationDataToString,  throwSyntaxError} = require './helpers'
 
 
-# nextTag = (remainingText) ->
-#   remainingText.match OPENING_TAG
-#   remainingText.match CLOSING_TAG
-
 # getAttributes = (attributesText) ->
 #   attributesValues = {}
 #   TAG_ATTRIBUTES.lastIndex = 0
@@ -15,19 +11,22 @@ locationDataToString,  throwSyntaxError} = require './helpers'
 #     attributesValues[attrMatches[1]] = attrMatches[2] || attrMatches[4] || true
 #   attributesValues
 
-# transformTag = (tagName,attributesText,selfClosing) ->
-#   transformedTokens = []
-#   attributes = getAttributes(attributesText)
-#   unless selfClosing
-#     nextTag()
+module.exports = class Parser
+  astLeafNode: (type, value = null) -> {type, value}
+  astBranchNode: (type, value = null) -> {type, value, children:[]}
 
+  activeBranchNode: -> last(@activeStates)
+  newestNode: -> last(@activeBranchNode().children) or @activeBranchNode()
+  pushActiveBranchNode: (node) ->
+    @activeBranchNode().children.push(node)
+    @activeStates.push(node)
+  popActiveBranchNode: -> @activeStates.pop()
+  addLeafNodeToActiveBranch: (node) ->
+    @activeBranchNode().children.push(node)
 
-
-exports.Rewriter = class Rewriter
- rewrite: (code, opts = {}) ->
-    @activeStates = [] # stack for states
-    @output = [] # buffer for rewritten fragments
-    @previousState = null # last state encountered
+  parse: (code, opts = {}) ->
+    @ast = @astBranchNode(ROOT) # abstract syntax tree
+    @activeStates = [@ast] # stack tracking current ast position (initialised with root node)
     @chunkLine = 0 # The start line for the current @chunk.
     @chunkColumn =  0 # The start column of the current @chunk.
     code = @clean code # The stripped, cleaned original source code.
@@ -35,82 +34,92 @@ exports.Rewriter = class Rewriter
     i = 0
     while @chunk = code[i..]
       consumed = \
-           @csxStart() or
-           @csxEscape() or
-           @csxUnescape() or
-           @csxEnd() or
-           @csxText() or
-           @coffeescriptCode()
+        @csxStart() or
+        @csxEscape() or
+        @csxUnescape() or
+        @csxEnd() or
+        @csxText() or
+        @coffeescriptCode()
 
       # Update position
       [@chunkLine, @chunkColumn] = @getLineAndColumnFromChunk consumed
 
       i += consumed
 
+    @ast
+
   csxStart: ->
     return 0 unless match = OPENING_TAG.exec @chunk
     [input, tagName, attributesText, selfClosing] = match
-    @output.push tagName, '(', rewriteAttributes(attributesText)
+
+    @pushActiveBranchNode @astBranchNode CSX_EL, tagName
+    @addLeafNodeToActiveBranch @rewriteAttributes attributesText
+
+    # console.log CSX_START
 
     if selfClosing
-      @output.push ')'
-    else
-      @activeStates.push CSX_START
+      @popActiveBranchNode() # close csx tag
+      # console.log CSX_END
 
     input.length
 
   csxEscape: ->
-    return 0 unless last(@activeStates) == CSX_START and @chunk.charAt(0) == '{'
+    return 0 unless @activeBranchNode().type == CSX_EL and @chunk.charAt(0) == '{'
 
-    # do we need a comma? TODO REPLACE WITH STATES AST
-    if @previousState == CSX_TEXT
-    @previousState == CSX_START or
-    @previousState == CSX_END or
-    @previousState == CSX_ESC_END
-      @output.push ','
-
-    @activeStates.push CSX_ESC_START
-    @previousState = CSX_ESC_START
+    @pushActiveBranchNode @astBranchNode CSX_ESC
+    # console.log CSX_ESC_START
     return 1
 
   csxUnescape: ->
-    return 0 unless last(@activeStates) == CSX_ESC_START and @chunk.charAt(0) == '}'
-    @activeStates.pop()
-    @previousState = CSX_ESC_START
+    return 0 unless @activeBranchNode().type == CSX_ESC and @chunk.charAt(0) == '}'
+    
+    @popActiveBranchNode() # close csx escape
+    # console.log CSX_ESC_END
     return 1
 
   csxEnd: ->
-    return 0 unless last(@activeStates) == CSX_START
+    return 0 unless @activeBranchNode().type == CSX_EL
     return 0 unless match = CLOSING_TAG.exec @chunk
     [input, tagName] = match
 
-    @output.push ')'
+    unless tagName == @activeBranchNode().value
+      throwSyntaxError \
+        "CSX_START tag #{@activeBranchNode().value} doesn't match CSX_END tag #{tagName}",
+        first_line: @chunkLine, first_column: @chunkColumn
 
-    @activeStates.pop()
-    @previousState = CSX_END
+    @popActiveBranchNode() # close csx tag
+    # console.log CSX_END
+
     input.length
 
   csxText: ->
-    return 0 unless last(@activeStates) == CSX_START
+    return 0 unless @activeBranchNode().type == CSX_EL
 
-    # do we need a comma? TODO REPLACE WITH STATES AST
-    unless @previousState == CSX_TEXT
-      if @previousState == CSX_START or
-      @previousState == CSX_END or
-      @previousState == CSX_ESC_END
-        @output.push ','
+    unless @newestNode().type == CSX_TEXT
+      @addLeafNodeToActiveBranch @astLeafNode CSX_TEXT, '' # init value as string
 
-    @output.push @chunk.charAt 0
-    @previousState = CSX_TEXT
+    # newestNode is (now) CSX_TEXT
+    @newestNode().value += @chunk.charAt 0
+
     return 1
 
+  # fallthrough
   coffeescriptCode: ->
-    # return 0 unless @activeStates.length == 0 or last(@activeStates) == CSX_ESC_START
-    @output.push @chunk.charAt 0
-    @previousState = COFFEESCRIPT_CODE
+    # return 0 unless @activeBranchNode().type == ROOT or @activeBranchNode().type == CSX_ESC
+    
+    unless @newestNode().type == CS
+      @addLeafNodeToActiveBranch @astLeafNode CS, '' # init value as string
+
+    # newestNode is (now) CS
+    @newestNode().value += @chunk.charAt 0
+    
     return 1
 
   rewriteAttributes: (attributesText) ->
+    unless attributesText.length
+      attributesText = null
+
+    @astBranchNode CSX_ATTRS, attributesText
 
   clean: (code) ->
     code = code.slice(1) if code.charCodeAt(0) is BOM
@@ -149,12 +158,24 @@ exports.Rewriter = class Rewriter
 # Constants
 # ---------
 
-COFFEESCRIPT_CODE = {}
-CSX_START = {}
-CSX_END = {}
-CSX_ESC_START = {}
-CSX_ESC_END = {}
-CSX_TEXT = {}
+# branch (state) nodes
+ROOT = 'ROOT'
+CSX_EL = 'CSX_EL'
+CSX_ESC = 'CSX_ESC'
+CSX_ATTRS = 'CSX_ATTRS'
+CSX_ATTR_PAIR = 'CSX_ATTR_PAIR'
+
+# leaf nodes
+CS = 'CS'
+CSX_TEXT = 'CSX_TEXT'
+CSX_ATTR_KEY = 'CSX_ATTR_KEY'
+CSX_ATTR_VAL = 'CSX_ATTR_VAL'
+
+# tokens
+CSX_START = 'CSX_START'
+CSX_END = 'CSX_END'
+CSX_ESC_START = 'CSX_ESC_START'
+CSX_ESC_END = 'CSX_ESC_END'
 
 
 # [1] tag name
