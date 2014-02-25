@@ -10,8 +10,9 @@ locationDataToString,  throwSyntaxError} = require './helpers'
 #   while attrMatches = TAG_ATTRIBUTES.exec attributesText
 #     attributesValues[attrMatches[1]] = attrMatches[2] || attrMatches[4] || true
 #   attributesValues
+#   
 
-module.exports = class Parser
+exports.Parser = class Parser
   astLeafNode: (type, value = null) -> {type, value}
   astBranchNode: (type, value = null) -> {type, value, children:[]}
 
@@ -45,6 +46,12 @@ module.exports = class Parser
       [@chunkLine, @chunkColumn] = @getLineAndColumnFromChunk consumed
 
       i += consumed
+
+    
+    unless @activeBranchNode() == @ast
+      throwSyntaxError \
+        "Unexpected EOF: unclosed #{@activeBranchNode().type}",
+        first_line: @chunkLine, first_column: @chunkColumn
 
     @ast
 
@@ -115,6 +122,7 @@ module.exports = class Parser
     
     return 1
 
+  # TODO: implement attributes
   rewriteAttributes: (attributesText) ->
     unless attributesText.length
       attributesText = null
@@ -128,9 +136,6 @@ module.exports = class Parser
       code = "\n#{code}"
       @chunkLine--
     code
-
-  # Helpers
-  # -------
 
   # Returns the line and column number from an offset into the current chunk.
   #
@@ -155,28 +160,71 @@ module.exports = class Parser
 
     [@chunkLine + lineCount, column]
 
+exports.compileToCS = (ast) ->
+
+  serialise = (node) -> serialisers[node.type](node)
+
+  genericBranchSerialiser = (node) ->
+    node.children
+      .map((child) -> serialise child)
+      .join('')
+
+  genericLeafSerialiser = (node) -> node.value
+
+  serialisers =
+    ROOT: genericBranchSerialiser
+    CSX_EL: (node) ->
+      childrenSerialised = node.children
+        .map((child) -> serialise child)
+        .filter((child) -> child?) # filter empty text nodes
+        .join(', ')
+
+      "#{node.value}(#{childrenSerialised})"
+    CSX_ESC: genericBranchSerialiser
+    # not implemented yet
+    CSX_ATTRS: (node) -> if node.value then '{}' else 'null' # genericBranchSerialiser
+    CSX_ATTR_PAIR: genericBranchSerialiser
+    # leaf nodes
+    CS: genericLeafSerialiser
+    CSX_TEXT: (node) ->
+      # current react behaviour is to trim whitespace from text nodes
+      trimmedValue = node.value.trim()
+      if trimmedValue == ''
+        # empty/whitespace-only nodes return null so they can be filtered out
+        null
+      else
+        "'''#{trimmedValue}'''"
+    CSX_ATTR_KEY: genericLeafSerialiser
+    CSX_ATTR_VAL: genericLeafSerialiser
+
+  serialise(ast)
+
+
 # Constants
 # ---------
 
-# branch (state) nodes
+# branch (state) node types
 ROOT = 'ROOT'
 CSX_EL = 'CSX_EL'
 CSX_ESC = 'CSX_ESC'
 CSX_ATTRS = 'CSX_ATTRS'
 CSX_ATTR_PAIR = 'CSX_ATTR_PAIR'
 
-# leaf nodes
+# leaf (value) node types
 CS = 'CS'
 CSX_TEXT = 'CSX_TEXT'
 CSX_ATTR_KEY = 'CSX_ATTR_KEY'
 CSX_ATTR_VAL = 'CSX_ATTR_VAL'
 
 # tokens
+# these aren't really used as there aren't distinct lex/parse steps
+# they're just names for use in debugging
 CSX_START = 'CSX_START'
 CSX_END = 'CSX_END'
 CSX_ESC_START = 'CSX_ESC_START'
 CSX_ESC_END = 'CSX_ESC_END'
 
+# JSX tag matching regexes
 
 # [1] tag name
 # [2] attributes text
@@ -206,4 +254,5 @@ COMMENT    = /^###([^#][\s\S]*?)(?:###[^\n\S]*|###$)|^(?:\s*#(?!##[^#]).*)+/
 
 # Token cleaning regexes.
 TRAILING_SPACES = /\s+$/
+
 
