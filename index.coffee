@@ -1,14 +1,41 @@
-{Parser,compileToCS} = require './csx'
 
-parser = new Parser()
+{Parser, serialise} = require './csx'
 
-console.log 'pathological case of CSX escape inside CSX tag'
-ast = parser.parse '<Person name={window.isLoggedIn ? window.name : \'\'} />'
-console.log JSON.stringify(ast, null, 4)
+start = new Date()
+ast = new Parser().parse '''
+
+"<html></html>"
+
+<Car doors=4 safety={getSafetyRating()*2} crackedWindscreen = "yep" 
+insurance={ insurancehas() ? 'cool': 'ahh noooo'} data-yolo='swag\\' checked check=me_out />
+
+'''
+"""
+# @jsx React.DOM
+
+<Person name={window.isLoggedIn ? window.name : ''} />
+
+<Person name={window.isLoggedIn 
+? window.name 
+: \'\'} />
 
 
-ast = parser.parse """
-# @jsx React.DOM 
+<Person name={window.isLoggedIn 
+? window.name 
+: \'\'}> 
+{
+
+  for n in a
+    <div>
+      asf
+      <li xy={"as"}>{ n+1 }<a /> <a /> </li>
+    </div>
+}
+
+</Person>
+
+<Person name={window.isLoggedIn ? window.name : \'\'} 
+loltags='on new line' />
 
 HelloWorld = React.createClass({
   render: () ->
@@ -38,4 +65,8 @@ React.createClass
 console.log 'AST:'
 console.log JSON.stringify(ast, null, 4)
 console.log 'Transformed CSX:'
-console.log compileToCS ast
+console.log serialise ast
+
+end = new Date()
+
+console.log "done in #{end - start}ms"
