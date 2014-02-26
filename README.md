@@ -2,7 +2,7 @@
 
 Adds simplistic JSX support for Coffeescript so you can write a React component in Coffeescript, with no escaping.
 
-`car-component.csx`:
+car-component.csx:
 ```html
 <Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
 	<FrontSeat />
@@ -11,7 +11,7 @@ Adds simplistic JSX support for Coffeescript so you can write a React component 
 </Car>
 ```
 
-`buildscript.coffee`:
+buildscript.coffee:
 ```coffeescript
 fs = require 'fs'
 rewriter = require './index.coffee'
@@ -21,7 +21,7 @@ componentInCSX = fs.readFileSync('./car-component.csx', 'utf8')
 console.log rewriter(componentInCSX)
 ```
 
-`output`:
+output:
 ```coffeescript
 Car({"doors": "4", "safety": (getSafetyRating()*2), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), '''Which one will I take?''')
 ```
