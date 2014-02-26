@@ -1,25 +1,27 @@
-### CSX Rewriter
+# CSX Rewriter
 
 Adds simplistic JSX support for Coffeescript
 
-```coffeescript
-rewriter = require './index.coffee'
-
-myJSXInCoffee = """
-	<Car 
-	doors=4 safety={getSafetyRating()*2} 
-	crackedWindscreen = "yep" insurance={ 
-	insurancehas() ? 'cool': 'ahh noooo'
-	} \n data-yolo='swag\\' checked check=me_out />
-	"""
-
-rewriter(myJSXInCoffee)
-
-=> Car({"doors": "4", "safety": (getSafetyRating()*2), "crackedWindscreen": "yep", "insurance": ( insurancehas() ? 'cool': 'ahh noooo' ), "data-yolo": 'swag\\', "checked": true, "check": "me_out"})
-
+##### car-component.csx
+```html
+<Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
+	<FrontSeat />
+	<BackSeat />
+	Which one will I take?
+</Car>
 ```
 
+##### buildscript.coffee
+```coffeescript
+fs = require 'fs'
+rewriter = require './index.coffee'
 
-# Tests
+componentInCSX = fs.readFileSync('./car-component.csx', 'utf8')
+
+console.log rewriter(componentInCSX)
+# => Car({"doors": "4", "safety": (getSafetyRating()*2), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), '''Which one will I take?''')
+```
+
+#### Tests
 
 `cake test` or `cake watch:test`
