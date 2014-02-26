@@ -128,34 +128,36 @@ exports.Parser = Parser = class Parser
   rewriteAttributes: (attributesText) ->
     astBranchNode CSX_ATTRIBUTES, null, do ->
       while attrMatches = TAG_ATTRIBUTES.exec attributesText
-        unless attrMatches[1] # has attribute
+        [ attrNameValText, attrName, doubleQuotedVal,
+          singleQuotedVal, csEscVal, bareVal ] = attrMatches
+        unless attrName # has attribute
           throwSyntaxError \
-            "Invalid attribute #{attrMatches[0]} in #{attributesText}",
+            "Invalid attribute #{attrNameValText} in #{attributesText}",
             first_line: @chunkLine, first_column: @chunkColumn
 
-        if attrMatches[2] # "value"
+        if doubleQuotedVal # "value"
           astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrMatches[1]}\"")
-            astLeafNode(CSX_ATTR_VAL, "\"#{attrMatches[2]}\"")
+            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            astLeafNode(CSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
           ])
-        else if attrMatches[3] # 'value'
+        else if singleQuotedVal # 'value'
           astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrMatches[1]}\"")
-            astLeafNode(CSX_ATTR_VAL, "'#{attrMatches[3]}'")
+            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            astLeafNode(CSX_ATTR_VAL, "'#{singleQuotedVal}'")
           ])
-        else if attrMatches[4] # {value}
+        else if csEscVal # {value}
           astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrMatches[1]}\"")
-            astBranchNode(CSX_ESC, null, [astLeafNode(CS, attrMatches[4])])
+            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            astBranchNode(CSX_ESC, null, [astLeafNode(CS, csEscVal)])
           ])
-        else if attrMatches[5] # value
+        else if bareVal # value
           astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrMatches[1]}\"")
-            astLeafNode(CSX_ATTR_VAL, "\"#{attrMatches[5]}\"")
+            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            astLeafNode(CSX_ATTR_VAL, "\"#{bareVal}\"")
           ])
         else
           astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrMatches[1]}\"")
+            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
             astLeafNode(CSX_ATTR_VAL, 'true')
           ])
 
