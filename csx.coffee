@@ -20,7 +20,15 @@ exports.Parser = Parser = class Parser
 
     i = 0
     while @chunk = code[i..]
-      consumed = \
+      consumed = (
+          if @activeBranchNode().type != CSX_EL
+            @csComment() or
+            @csHeredoc() or
+            @csString() or
+            @jsEscaped()
+        ) or
+        # TODO: support regex and heregex
+        # @csRegex() or
         @csxStart() or
         @csxEscape() or
         @csxUnescape() or
@@ -41,10 +49,51 @@ exports.Parser = Parser = class Parser
     @ast # return completed ast
 
   # lex/parse states
+  
+  # Matches and consumes comments.
+  csComment: ->
+    return 0 unless match = @chunk.match COMMENT
+    [comment, here] = match
+
+    @addLeafNodeToActiveBranch astLeafNode CS_COMMENT, comment
+
+    comment.length
+
+  # Matches heredocs
+  csHeredoc: ->
+    return 0 unless match = HEREDOC.exec @chunk
+    heredoc = match[0]
+
+    @addLeafNodeToActiveBranch astLeafNode CS_HEREDOC, heredoc
+
+    heredoc.length
+
+  # Matches strings, including multi-line strings. Ensures that quotation marks
+  # are balanced within the string's contents, and within nested interpolations.
+  csString: ->
+    switch quote = @chunk.charAt 0
+      when "'" then [string] = SIMPLESTR.exec @chunk
+      when '"' then string = @balancedString @chunk, '"'
+    return 0 unless string
+
+    @addLeafNodeToActiveBranch astLeafNode CS_STRING, string
+
+    string.length
+
+  # Matches JavaScript interpolated directly into the source via backticks.
+  jsEscaped: ->
+    return 0 unless @chunk.charAt(0) is '`' and match = JSTOKEN.exec @chunk
+    script = match[0]
+
+    @addLeafNodeToActiveBranch astLeafNode JS_ESC, script
+
+    script.length
 
   csxStart: ->
     return 0 unless match = OPENING_TAG.exec @chunk
     [input, tagName, attributesText, unneededJunk, selfClosing] = match
+
+    return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
     @pushActiveBranchNode astBranchNode CSX_EL, tagName
     @addLeafNodeToActiveBranch @rewriteAttributes attributesText
@@ -124,7 +173,6 @@ exports.Parser = Parser = class Parser
   addLeafNodeToActiveBranch: (node) ->
     @activeBranchNode().children.push(node)
 
-  # TODO: implement attributes
   rewriteAttributes: (attributesText) ->
     astBranchNode CSX_ATTRIBUTES, null, do ->
       while attrMatches = TAG_ATTRIBUTES.exec attributesText
@@ -196,6 +244,38 @@ exports.Parser = Parser = class Parser
 
     [@chunkLine + lineCount, column]
 
+  # Matches a balanced group such as a single or double-quoted string. Pass in
+  # a series of delimiters, all of which must be nested correctly within the
+  # contents of the string. This method allows us to have strings within
+  # interpolations within strings, ad infinitum.
+  balancedString: (str, end) ->
+    continueCount = 0
+    stack = [end]
+    for i in [1...str.length]
+      if continueCount
+        --continueCount
+        continue
+      switch letter = str.charAt i
+        when '\\'
+          ++continueCount
+          continue
+        when end
+          stack.pop()
+          unless stack.length
+            return str[0..i]
+          end = stack[stack.length - 1]
+          continue
+      if end is '}' and letter in ['"', "'"]
+        stack.push end = letter
+      else if end is '}' and letter is '/' and match = (HEREGEX.exec(str[i..]) or REGEX.exec(str[i..]))
+        continueCount += match[0].length - 1
+      else if end is '}' and letter is '{'
+        stack.push end = '}'
+      else if end is '"' and prev is '#' and letter is '{'
+        stack.push end = '}'
+      prev = letter
+    @error "missing #{ stack.pop() }, starting"
+
 
 exports.serialise = serialise = (ast) ->
   serialiseNode = (node) -> serialisers[node.type](node)
@@ -214,7 +294,8 @@ exports.serialise = serialise = (ast) ->
         .map((child) -> serialiseNode child)
         .filter((child) -> child?) # filter empty text nodes
         .join(', ')
-      "#{node.value}(#{childrenSerialised})"
+      prefix = if HTML_ELEMENTS[node.value]? then 'React.DOM.' else ''
+      "#{prefix}#{node.value}(#{childrenSerialised})"
     CSX_ESC: (node) ->
       childrenSerialised = node.children
         .map((child) -> serialiseNode child)
@@ -235,6 +316,10 @@ exports.serialise = serialise = (ast) ->
         .join(': ')
     # leaf nodes
     CS: genericLeafSerialiser
+    CS_COMMENT: genericLeafSerialiser
+    CS_HEREDOC: genericLeafSerialiser
+    CS_STRING: genericLeafSerialiser
+    JS_ESC: genericLeafSerialiser
     CSX_TEXT: (node) ->
       # current react behaviour is to trim whitespace from text nodes
       trimmedValue = node.value.trim()
@@ -242,7 +327,7 @@ exports.serialise = serialise = (ast) ->
         # empty/whitespace-only nodes return null so they can be filtered out
         null
       else
-        "'''#{trimmedValue}'''"
+        '"""'+trimmedValue+'"""'
     CSX_ATTR_KEY: genericLeafSerialiser
     CSX_ATTR_VAL: genericLeafSerialiser
 
@@ -261,6 +346,10 @@ CSX_ATTR_PAIR = 'CSX_ATTR_PAIR'
 
 # leaf (value) node types
 CS = 'CS'
+CS_COMMENT = 'CS_COMMENT'
+CS_HEREDOC = 'CS_HEREDOC'
+CS_STRING = 'CS_STRING'
+JS_ESC = 'JS_ESC'
 CSX_TEXT = 'CSX_TEXT'
 CSX_ATTR_KEY = 'CSX_ATTR_KEY'
 CSX_ATTR_VAL = 'CSX_ATTR_VAL'
@@ -305,5 +394,15 @@ COMMENT    = /^###([^#][\s\S]*?)(?:###[^\n\S]*|###$)|^(?:\s*#(?!##[^#]).*)+/
 
 # Token cleaning regexes.
 TRAILING_SPACES = /\s+$/
+
+
+HEREDOC    = /// ^ ("""|''') ((?: \\[\s\S] | [^\\] )*?) (?:\n[^\n\S]*)? \1 ///
+
+
+SIMPLESTR  = /^'[^\\']*(?:\\[\s\S][^\\']*)*'/
+
+JSTOKEN    = /^`[^\\`]*(?:\\.[^\\`]*)*`/
+
+HTML_ELEMENTS = require './htmlelements'
 
 
