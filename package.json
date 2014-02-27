@@ -1,0 +1,22 @@
+{
+  "name": "coffee-jsx-transformer",
+  "description": "React JSX support for Coffeescript",
+  "keywords": [
+    "coffeescript",
+    "react",
+    "jsx",
+    "transform"
+  ],
+  "author": "James Friend",
+  "version": "0.0.9",
+  "license": "MIT",
+  "scripts": {
+    "test": "node ./bin/cake test"
+  },
+  "homepage": "https://github.com/jsdf/coffee-jsx-transformer",
+  "bugs": "https://github.com/jsdf/coffee-jsx-transformer/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jsdf/coffee-jsx-transformer.git"
+  }
+}
