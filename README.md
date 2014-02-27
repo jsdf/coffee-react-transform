@@ -8,10 +8,10 @@ car-component.csx:
 # @jsx React.DOM 
 Car = React.createClass
   render: ->
-    <Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
+    <Car doors=4 stars={getSafetyRating()*5}  data-top-down="yep" checked>
       <FrontSeat />
       <BackSeat />
-      Which seat can I take? {@props.seat}
+      <p>Which seat can I take? {@props.seat}</p>
     </Car>
 
 React.renderComponent \
@@ -36,7 +36,7 @@ output:
 # @jsx React.DOM 
 Car = React.createClass
   render: ->
-    Car({"doors": "4", "safety": (getSafetyRating()*2), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), """Which seat can I take?""", (@props.seat))
+    Car({"doors": "4", "stars": (getSafetyRating()*5), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), React.DOM.p(null, """Which seat can I take?""", (@props.seat)))
 
 React.renderComponent \
   Car({"seat": "front, obvs"}),
