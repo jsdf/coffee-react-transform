@@ -16,11 +16,11 @@ buildscript.coffee:
 
 ```coffeescript
 fs = require 'fs'
-rewriter = require './index.coffee'
+rewrite = require './index.coffee'
 
 componentInCSX = fs.readFileSync('./car-component.csx', 'utf8')
 
-console.log rewriter(componentInCSX)
+console.log rewrite(componentInCSX)
 ```
 
 output:
