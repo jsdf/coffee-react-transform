@@ -14,9 +14,9 @@ log = (message, color, explanation) ->
   console.log color + message + reset + ' ' + (explanation or '')
 
 
-# Build rewriter from source.
+# Build transformer from source.
 build = (cb) ->
-  run ['--bare', '-o', './', '--compile', './csx.coffee', './helpers.coffee', './index.coffee'], cb
+  run ['--bare', '-o', './', '--compile', './csx-transformer.coffee', './helpers.coffee', './index.coffee'], cb
 
 # Run CoffeeScript command
 run = (args, cb) ->
@@ -28,11 +28,11 @@ run = (args, cb) ->
 
 test = -> run(['test.coffee'])
 
-task 'build', 'build csx rewriter from source', build
+task 'build', 'build csx transformer from source', build
 
 task 'test', 'run tests', test
 
 task 'watch:test', 'watch and run tests', ->
-  fs.watchFile './csx.coffee', interval: 1000, test
+  fs.watchFile './csx-transformer.coffee', interval: 1000, test
   fs.watchFile './test.coffee', interval: 1000, test
   log "watching..." , green

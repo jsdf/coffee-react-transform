@@ -1,1 +1,1 @@
-module.exports = require('./csx').rewrite
+module.exports = require('./csx-transformer').transform

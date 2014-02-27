@@ -1,34 +1,57 @@
-# CSX Rewriter
+# Coffeescript JSX Transformer
 
-Adds simplistic JSX support for Coffeescript so you can write a React component in Coffeescript, with no escaping.
+Provides support for JSX-in-Coffeescript (CSX) so you can write a React component in Coffeescript, with no escaping.
+Look ma, no backticks!
 
 car-component.csx:
 
 ```html
-<Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
-	<FrontSeat />
-	<BackSeat />
-	Which one will I take?
-</Car>
+# @jsx React.DOM 
+HelloMessage = React.createClass
+  render: ->
+    <Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
+      <FrontSeat />
+      <BackSeat />
+      Which seat can I take? {@props.seat}
+    </Car>
+
+React.renderComponent \
+  <Car seat="front, obvs" />,
+  document.getElementById 'container'
 ```
 
-buildscript.coffee:
+build.coffee:
 
 ```coffeescript
 fs = require 'fs'
-rewrite = require './index.coffee'
+transform = require 'csx-transformer'
 
 componentInCSX = fs.readFileSync('./car-component.csx', 'utf8')
 
-console.log rewrite(componentInCSX)
+console.log transform(componentInCSX)
 ```
 
 output:
 
 ```coffeescript
-Car({"doors": "4", "safety": (getSafetyRating()*2), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), '''Which one will I take?''')
+# @jsx React.DOM 
+HelloMessage = React.createClass
+  render: ->
+    Car({"doors": "4", "safety": (getSafetyRating()*2), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), """Which seat can I take?""", (@props.seat))
+
+React.renderComponent \
+  Car({"seat": "front, obvs"}),
+  document.getElementById 'container'
+```
+
+### Building
+
+```bash
+npm install -g coffee-script
+cake build
 ```
 
 ### Tests
 
 `cake test` or `cake watch:test`
+

@@ -2,14 +2,14 @@
 # tests
 # mainly for regressions, edge cases
 
-rewrite = require('./csx').rewrite
+transform = require('./csx-transformer').transform
 
 # simple testing of string equality of expected output 
 # vs actual output for various csx input
 # should catch any regressions in output
-testRewriterOutput = (description, input, expectedOutput) ->
-  rewritten = rewrite input
-  console.assert rewritten == expectedOutput,
+testTransformOutput = (description, input, expectedOutput) ->
+  transformed = transform input
+  console.assert transformed == expectedOutput,
   """
 
   #{description}
@@ -18,30 +18,30 @@ testRewriterOutput = (description, input, expectedOutput) ->
   #{expectedOutput}
 
   --- Actual output ---
-  #{rewritten}
+  #{transformed}
 
   """
 
 # start tests
 console.time('all tests passed')
 
-testRewriterOutput 'self closing tag',
+testTransformOutput 'self closing tag',
 """<Person />""",
 """Person(null)"""
 
-testRewriterOutput 'ambigious tag-like expression',
+testTransformOutput 'ambigious tag-like expression',
 """x = a <b > c""",
 """x = a <b > c"""
 
-testRewriterOutput 'ambigious tag',
+testTransformOutput 'ambigious tag',
 """x = a <b > c </b>""",
 """x = a React.DOM.b(null, \"\"\"c\"\"\")"""
 
-testRewriterOutput 'escaped coffeescript attribute',
+testTransformOutput 'escaped coffeescript attribute',
 """<Person name={window.isLoggedIn ? window.name : ''} />""",
 """Person({"name": (window.isLoggedIn ? window.name : '')})"""
 
-testRewriterOutput 'escaped coffeescript attribute over multiple lines' ,
+testTransformOutput 'escaped coffeescript attribute over multiple lines' ,
 """
 <Person name={window.isLoggedIn 
 ? window.name 
@@ -53,7 +53,7 @@ Person({"name": (window.isLoggedIn
 : '')})
 """
 
-testRewriterOutput 'multiple line escaped coffeescript with nested csx',
+testTransformOutput 'multiple line escaped coffeescript with nested csx',
 """
 <Person name={window.isLoggedIn 
 ? window.name 
@@ -79,7 +79,7 @@ Person({"name": (window.isLoggedIn
 ))
 """
 
-testRewriterOutput 'multiline tag attributes with escaped coffeescript',
+testTransformOutput 'multiline tag attributes with escaped coffeescript',
 """
 <Person name={window.isLoggedIn ? window.name : ''} 
 loltags='on new line' />
@@ -88,7 +88,7 @@ loltags='on new line' />
 Person({"name": (window.isLoggedIn ? window.name : ''), "loltags": 'on new line'})
 """
 
-testRewriterOutput 'example react class with csx, text and escaped coffeescript',
+testTransformOutput 'example react class with csx, text and escaped coffeescript',
 """
 HelloWorld = React.createClass({
   render: () ->
@@ -110,7 +110,7 @@ HelloWorld = React.createClass({
 });
 """
 
-testRewriterOutput 'more complex output',
+testTransformOutput 'more complex output',
 """
 setInterval(() ->
   React.renderComponent(
@@ -138,7 +138,7 @@ React.createClass
     return Nav({"color": "blue"}, (Profile(null, \"\"\"click\"\"\", (Math.random(),Selfclosing({"coolattr": true}))) for i in [start...finish]))
 """
 
-testRewriterOutput 'lots of attributes',
+testTransformOutput 'lots of attributes',
 """
 <Car doors=4 safety={getSafetyRating()*2} crackedWindscreen = "yep" 
 insurance={ insurancehas() ? 'cool': 'ahh noooo'} data-yolo='swag\\' checked check=me_out />
@@ -147,11 +147,11 @@ insurance={ insurancehas() ? 'cool': 'ahh noooo'} data-yolo='swag\\' checked che
 Car({"doors": "4", "safety": (getSafetyRating()*2), "crackedWindscreen": "yep", "insurance": ( insurancehas() ? 'cool': 'ahh noooo'), "data-yolo": 'swag\\', "checked": true, "check": "me_out"})
 """
 
-testRewriterOutput 'comment',
+testTransformOutput 'comment',
 """# <Person />""",
 """# <Person />"""
 
-testRewriterOutput 'herecomment',
+testTransformOutput 'herecomment',
 """
 ###
 <Person />
@@ -165,43 +165,43 @@ testRewriterOutput 'herecomment',
 
 # failing
 # TODO: support regex containing html
-# testRewriterOutput 'regex',
+# testTransformOutput 'regex',
 # """/<Person \/>/""",
 # """/<Person \/>/"""
 
-testRewriterOutput 'js escaped',
+testTransformOutput 'js escaped',
 """`<Person />`""",
 """`<Person />`"""
 
-testRewriterOutput 'string single quote',
+testTransformOutput 'string single quote',
 """'<Person />'""",
 """'<Person />'"""
 
-testRewriterOutput 'string double quote',
+testTransformOutput 'string double quote',
 '''"<Person />"''',
 '''"<Person />"'''
 
-testRewriterOutput 'string triple single quote',
+testTransformOutput 'string triple single quote',
 """'''<Person />'''""",
 """'''<Person />'''"""
 
-testRewriterOutput 'string triple double quote',
+testTransformOutput 'string triple double quote',
 '''"""<Person />"""''',
 '''"""<Person />"""'''
 
-testRewriterOutput 'js cannot be escaped within csx',
+testTransformOutput 'escaped js cannot be written within csx',
 """<Person> `i am not js` </Person>""",
 """Person(null, \"\"\"`i am not js`\"\"\")"""
 
-testRewriterOutput 'comment cannot be written within csx',
+testTransformOutput 'comment cannot be written within csx',
 """<Person>
 # i am not a comment
 </Person>""",
 """Person(null, \"\"\"# i am not a comment\"\"\")"""
 
-testRewriterOutput 'string cannot be written within csx',
-"""<Person> "i am not js" 'nor am i' </Person>""",
-"""Person(null, \"\"\""i am not js" 'nor am i'\"\"\")"""
+testTransformOutput 'string cannot be written within csx',
+"""<Person> "i am not a string" 'nor am i' </Person>""",
+"""Person(null, \"\"\""i am not a string" 'nor am i'\"\"\")"""
 
 # end tests
 console.timeEnd('all tests passed')

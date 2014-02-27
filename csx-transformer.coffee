@@ -7,7 +7,7 @@ locationDataToString,  throwSyntaxError} = require './helpers'
 astLeafNode = (type, value = null) -> {type, value}
 astBranchNode = (type, value = null, children = []) -> {type, value, children}
 
-exports.rewrite = (code, opts) ->
+exports.transform = (code, opts) ->
   serialise new Parser().parse code, opts
 
 exports.Parser = Parser = class Parser
