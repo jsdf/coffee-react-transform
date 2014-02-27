@@ -1,13 +1,12 @@
 # Coffeescript JSX Transformer
 
-Provides support for JSX-in-Coffeescript (CSX) so you can write a React component in Coffeescript, with no escaping.
-Look ma, no backticks!
+Provides support for JSX-in-Coffeescript (CSX) so you can write your React components in Coffeescript, with no escaping.
 
 car-component.csx:
 
 ```html
 # @jsx React.DOM 
-HelloMessage = React.createClass
+Car = React.createClass
   render: ->
     <Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
       <FrontSeat />
@@ -35,7 +34,7 @@ output:
 
 ```coffeescript
 # @jsx React.DOM 
-HelloMessage = React.createClass
+Car = React.createClass
   render: ->
     Car({"doors": "4", "safety": (getSafetyRating()*2), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), """Which seat can I take?""", (@props.seat))
 
