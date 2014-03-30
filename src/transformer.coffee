@@ -403,6 +403,6 @@ SIMPLESTR  = /^'[^\\']*(?:\\[\s\S][^\\']*)*'/
 
 JSTOKEN    = /^`[^\\`]*(?:\\.[^\\`]*)*`/
 
-HTML_ELEMENTS = require './htmlelements'
+HTML_ELEMENTS = require('./htmlelements')
 
 

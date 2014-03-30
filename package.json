@@ -11,7 +11,7 @@
   "version": "0.0.9",
   "license": "MIT",
   "scripts": {
-    "test": "node ./bin/cake test"
+    "test": "cake test"
   },
   "homepage": "https://github.com/jsdf/coffee-jsx-transformer",
   "bugs": "https://github.com/jsdf/coffee-jsx-transformer/issues",

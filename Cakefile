@@ -16,7 +16,7 @@ log = (message, color, explanation) ->
 
 # Build transformer from source.
 build = (cb) ->
-  run ['--bare', '-o', './', '--compile', './csx-transformer.coffee', './helpers.coffee', './index.coffee'], cb
+  run ['--bare', '-o', 'lib/', '--compile', 'src/csx-transformer.coffee', 'src/helpers.coffee', 'src/index.coffee'], cb
 
 # Run CoffeeScript command
 run = (args, cb) ->
@@ -26,13 +26,13 @@ run = (args, cb) ->
   proc.on        'exit', (status) ->
 		cb() if typeof cb is 'function'
 
-test = -> run(['test.coffee'])
+test = -> run(['src/test.coffee'])
 
 task 'build', 'build csx transformer from source', build
 
 task 'test', 'run tests', test
 
 task 'watch:test', 'watch and run tests', ->
-  fs.watchFile './csx-transformer.coffee', interval: 1000, test
-  fs.watchFile './test.coffee', interval: 1000, test
+  fs.watchFile 'src/csx-transformer.coffee', interval: 1000, test
+  fs.watchFile 'src/test.coffee', interval: 1000, test
   log "watching..." , green
