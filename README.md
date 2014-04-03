@@ -23,7 +23,7 @@ React.renderComponent <Car seat="front, obvs" />,
 transform
 
 ```bash
-csx-transformer car-component.csx
+csx-transform car-component.csx
 ```
 
 output
@@ -40,13 +40,13 @@ React.renderComponent Car({"seat": "front, obvs"}),
 
 ### Installation
 ```bash
-npm install -g coffee-jsx-transformer
+npm install -g coffee-react-transform
 ```
 
 ### Usage
 
 ```bash
-csx-transformer [input file]
+csx-transform [input file]
 ```
 Outputs Coffeescript code to stdout. Redirect it to a file or straight to the Coffeescript compiler, eg.
 ```bash

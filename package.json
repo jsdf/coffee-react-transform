@@ -1,6 +1,6 @@
 {
-  "name": "coffee-jsx-transformer",
-  "description": "FB React JSX support for Coffeescript",
+  "name": "coffee-react-transform",
+  "description": "React JSX support for Coffeescript",
   "keywords": [
     "coffeescript",
     "react",
@@ -9,11 +9,11 @@
     "coffee-react"
   ],
   "author": "James Friend",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://raw.github.com/jsdf/coffee-jsx-transformer/master/LICENSE"
+      "url": "https://raw.github.com/jsdf/coffee-react-transform/master/LICENSE"
     }
   ],
   "scripts": {
@@ -24,10 +24,10 @@
   "bin": {
     "csx-transform": "./bin/csx-transform"
   },
-  "homepage": "https://github.com/jsdf/coffee-jsx-transformer",
-  "bugs": "https://github.com/jsdf/coffee-jsx-transformer/issues",
+  "homepage": "https://github.com/jsdf/coffee-react-transform",
+  "bugs": "https://github.com/jsdf/coffee-react-transform/issues",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jsdf/coffee-jsx-transformer.git"
+    "url": "git://github.com/jsdf/coffee-react-transform.git"
   }
 }
