@@ -9,7 +9,7 @@
     "coffee-react"
   ],
   "author": "James Friend",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "licenses": [
     {
       "type": "MIT",
@@ -20,16 +20,9 @@
     "test": "cake test",
     "prepublish": "cake build"
   },
-  "files": ["index.js"],
-  "directories": {
-    "lib": "./lib"
-  },
-  "preferGlobal": true,
+  "files": ["index.js","lib/","bin/"],
   "bin": {
     "csx-transform": "./bin/csx-transform"
-  },
-  "engines": {
-    "node": ">=0.8.0"
   },
   "homepage": "https://github.com/jsdf/coffee-jsx-transformer",
   "bugs": "https://github.com/jsdf/coffee-jsx-transformer/issues",

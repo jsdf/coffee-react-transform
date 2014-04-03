@@ -2,7 +2,7 @@
 
 Provides support for an equivalent of JSX syntax in Coffeescript (called CSX) so you can write your Facebook React components with the full awesomeness of Coffeescript.
 
-For example:
+#### Example
 
 car-component.csx
 
@@ -36,6 +36,11 @@ Car = React.createClass
 
 React.renderComponent Car({"seat": "front, obvs"}),
   document.getElementById 'container'
+```
+
+### Installation
+```bash
+npm install -g coffee-jsx-transformer
 ```
 
 ### Usage
