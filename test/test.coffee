@@ -2,7 +2,7 @@
 # tests
 # mainly for regressions, edge cases
 
-transform = require('./transformer').transform
+transform = require('../src/transformer').transform
 
 # simple testing of string equality of expected output 
 # vs actual output for various csx input

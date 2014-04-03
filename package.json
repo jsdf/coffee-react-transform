@@ -5,13 +5,19 @@
     "coffeescript",
     "react",
     "jsx",
-    "transform"
+    "csx",
+    "coffee-react"
   ],
   "author": "James Friend",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "test": "cake test"
+    "test": "cake test",
+    "prepublish": "cake build"
+  },
+  "preferGlobal": true,
+  "bin": {
+    "csx-transform": "./bin/csx-transform"
   },
   "homepage": "https://github.com/jsdf/coffee-jsx-transformer",
   "bugs": "https://github.com/jsdf/coffee-jsx-transformer/issues",

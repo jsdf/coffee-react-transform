@@ -13,26 +13,34 @@ unless process.env.NODE_DISABLE_COLORS
 log = (message, color, explanation) ->
   console.log color + message + reset + ' ' + (explanation or '')
 
-
 # Build transformer from source.
 build = (cb) ->
-  run ['--bare', '-o', 'lib/', '--compile', 'src/csx-transformer.coffee', 'src/helpers.coffee', 'src/index.coffee'], cb
+  exec 'mkdir', ['-p','bin', 'lib'], ->
+    compile ['transformer', 'helpers'], 'src/', 'lib/', ->
+      exec 'cp', ['src/htmlelements.js','lib/htmlelements.js'], cb
+
+compile = (srcFiles, srcDir, destDir, cb) ->
+  srcFilePaths = srcFiles.map (filename) -> "#{srcDir}/#{filename}.coffee"
+  args = ['--bare', '-o', destDir, '--compile'].concat srcFilePaths
+  coffee args, cb
 
 # Run CoffeeScript command
-run = (args, cb) ->
-  proc =         spawn 'coffee', [].concat(args)
+coffee = (args, cb) -> exec 'coffee', args, cb
+
+exec = (executable, args = [], cb) ->
+  proc =         spawn executable, args
   proc.stdout.on 'data', (buffer) -> log buffer.toString(), green
   proc.stderr.on 'data', (buffer) -> log buffer.toString(), red
   proc.on        'exit', (status) ->
 		cb() if typeof cb is 'function'
 
-test = -> run(['src/test.coffee'])
+test = -> coffee ['test/test.coffee']
 
 task 'build', 'build csx transformer from source', build
 
-task 'test', 'run tests', test
+task 'test', 'coffee tests', test
 
-task 'watch:test', 'watch and run tests', ->
-  fs.watchFile 'src/csx-transformer.coffee', interval: 1000, test
+task 'watch:test', 'watch and coffee tests', ->
+  fs.watchFile 'src/transformer.coffee', interval: 1000, test
   fs.watchFile 'src/test.coffee', interval: 1000, test
   log "watching..." , green
