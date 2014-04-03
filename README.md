@@ -1,6 +1,6 @@
-# Coffeescript JSX Transformer
+# Coffeescript React Transformer
 
-Provides support for JSX-in-Coffeescript (CSX) so you can write your React components in Coffeescript, with no escaping.
+Provides support for an equivalent of JSX syntax in Coffeescript (called CSX) so you can write your Facebook React components with the full awesomeness of Coffeescript.
 
 car-component.csx:
 
@@ -14,23 +14,17 @@ Car = React.createClass
       <p>Which seat can I take? {@props.seat}</p>
     </Car>
 
-React.renderComponent \
-  <Car seat="front, obvs" />,
+React.renderComponent <Car seat="front, obvs" />,
   document.getElementById 'container'
 ```
 
-build.coffee:
+Transform it to Coffeescript:
 
-```coffeescript
-fs = require 'fs'
-transform = require 'csx-transformer'
-
-componentInCSX = fs.readFileSync('./car-component.csx', 'utf8')
-
-console.log transform(componentInCSX)
+```bash
+csx-transformer car-component.csx
 ```
 
-output:
+Output:
 
 ```coffeescript
 # @csx React.DOM 
@@ -38,16 +32,18 @@ Car = React.createClass
   render: ->
     Car({"doors": "4", "stars": (getSafetyRating()*5), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), React.DOM.p(null, """Which seat can I take?""", (@props.seat)))
 
-React.renderComponent \
-  Car({"seat": "front, obvs"}),
+React.renderComponent Car({"seat": "front, obvs"}),
   document.getElementById 'container'
 ```
 
-### Building
+### Usage
 
 ```bash
-npm install -g coffee-script
-cake build
+csx-transformer [input file]
+```
+Outputs Coffeescript code to stdout. Redirect it to a file or straight to the Coffeescript compiler, eg.
+```bash
+csx-transform examples/car.csx | coffee -cs > car.js
 ```
 
 ### Tests

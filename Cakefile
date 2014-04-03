@@ -38,9 +38,9 @@ test = -> coffee ['test/test.coffee']
 
 task 'build', 'build csx transformer from source', build
 
-task 'test', 'coffee tests', test
+task 'test', 'run tests', test
 
-task 'watch:test', 'watch and coffee tests', ->
+task 'watch:test', 'watch and run tests', ->
   fs.watchFile 'src/transformer.coffee', interval: 1000, test
-  fs.watchFile 'src/test.coffee', interval: 1000, test
+  fs.watchFile 'test/test.coffee', interval: 1000, test
   log "watching..." , green

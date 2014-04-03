@@ -1,5 +1,8 @@
 # @csx React.DOM 
-HelloMessage = React.createClass
+
+React = require('react')
+
+Car = React.createClass
   render: ->
     <Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
       <FrontSeat />
