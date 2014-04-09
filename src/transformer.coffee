@@ -3,17 +3,17 @@
 {count, starts, compact, last, repeat,
 locationDataToString,  throwSyntaxError} = require './helpers'
 
-# ast node builders
-astLeafNode = (type, value = null) -> {type, value}
-astBranchNode = (type, value = null, children = []) -> {type, value, children}
+# parse tree node builders
+parseTreeLeafNode = (type, value = null) -> {type, value}
+parseTreeBranchNode = (type, value = null, children = []) -> {type, value, children}
 
 exports.transform = (code, opts) ->
   serialise new Parser().parse code, opts
 
 exports.Parser = Parser = class Parser
   parse: (code, opts = {}) ->
-    @ast = astBranchNode ROOT # abstract syntax tree
-    @activeStates = [@ast] # stack tracking current ast position (initialised with root node)
+    @parseTree = parseTreeBranchNode ROOT # concrete syntax tree (initialised with root node)
+    @activeStates = [@parseTree] # stack tracking current parse tree position (starting with root)
     @chunkLine = 0 # The start line for the current @chunk.
     @chunkColumn =  0 # The start column of the current @chunk.
     code = @clean code # The stripped, cleaned original source code.
@@ -41,12 +41,12 @@ exports.Parser = Parser = class Parser
 
       i += consumed
     
-    unless @activeBranchNode() == @ast
+    unless @activeBranchNode() == @parseTree
       throwSyntaxError \
         "Unexpected EOF: unclosed #{@activeBranchNode().type}",
         first_line: @chunkLine, first_column: @chunkColumn
 
-    @ast # return completed ast
+    @parseTree # return completed parseTree
 
   # lex/parse states
   
@@ -55,7 +55,7 @@ exports.Parser = Parser = class Parser
     return 0 unless match = @chunk.match COMMENT
     [comment, here] = match
 
-    @addLeafNodeToActiveBranch astLeafNode CS_COMMENT, comment
+    @addLeafNodeToActiveBranch parseTreeLeafNode CS_COMMENT, comment
 
     comment.length
 
@@ -64,7 +64,7 @@ exports.Parser = Parser = class Parser
     return 0 unless match = HEREDOC.exec @chunk
     heredoc = match[0]
 
-    @addLeafNodeToActiveBranch astLeafNode CS_HEREDOC, heredoc
+    @addLeafNodeToActiveBranch parseTreeLeafNode CS_HEREDOC, heredoc
 
     heredoc.length
 
@@ -76,7 +76,7 @@ exports.Parser = Parser = class Parser
       when '"' then string = @balancedString @chunk, '"'
     return 0 unless string
 
-    @addLeafNodeToActiveBranch astLeafNode CS_STRING, string
+    @addLeafNodeToActiveBranch parseTreeLeafNode CS_STRING, string
 
     string.length
 
@@ -85,7 +85,7 @@ exports.Parser = Parser = class Parser
     return 0 unless @chunk.charAt(0) is '`' and match = JSTOKEN.exec @chunk
     script = match[0]
 
-    @addLeafNodeToActiveBranch astLeafNode JS_ESC, script
+    @addLeafNodeToActiveBranch parseTreeLeafNode JS_ESC, script
 
     script.length
 
@@ -95,29 +95,24 @@ exports.Parser = Parser = class Parser
 
     return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
-    @pushActiveBranchNode astBranchNode CSX_EL, tagName
-    @addLeafNodeToActiveBranch @rewriteAttributes attributesText
-
-    # console.log CSX_START
+    @pushActiveBranchNode parseTreeBranchNode CSX_EL, tagName
+    @addLeafNodeToActiveBranch @parseCSXAttributes attributesText
 
     if selfClosing
       @popActiveBranchNode() # close csx tag
-      # console.log CSX_END
 
     input.length
 
   csxEscape: ->
     return 0 unless @activeBranchNode().type == CSX_EL and @chunk.charAt(0) == '{'
 
-    @pushActiveBranchNode astBranchNode CSX_ESC
-    # console.log CSX_ESC_START
+    @pushActiveBranchNode parseTreeBranchNode CSX_ESC
     return 1
 
   csxUnescape: ->
     return 0 unless @activeBranchNode().type == CSX_ESC and @chunk.charAt(0) == '}'
     
     @popActiveBranchNode() # close csx escape
-    # console.log CSX_ESC_END
     return 1
 
   csxEnd: ->
@@ -131,7 +126,6 @@ exports.Parser = Parser = class Parser
         first_line: @chunkLine, first_column: @chunkColumn
 
     @popActiveBranchNode() # close csx tag
-    # console.log CSX_END
 
     input.length
 
@@ -139,7 +133,7 @@ exports.Parser = Parser = class Parser
     return 0 unless @activeBranchNode().type == CSX_EL
 
     unless @newestNode().type == CSX_TEXT
-      @addLeafNodeToActiveBranch astLeafNode CSX_TEXT, '' # init value as string
+      @addLeafNodeToActiveBranch parseTreeLeafNode CSX_TEXT, '' # init value as string
 
     # newestNode is (now) CSX_TEXT
     @newestNode().value += @chunk.charAt 0
@@ -151,14 +145,14 @@ exports.Parser = Parser = class Parser
     # return 0 unless @activeBranchNode().type == ROOT or @activeBranchNode().type == CSX_ESC
     
     unless @newestNode().type == CS
-      @addLeafNodeToActiveBranch astLeafNode CS, '' # init value as string
+      @addLeafNodeToActiveBranch parseTreeLeafNode CS, '' # init value as string
 
     # newestNode is (now) CS
     @newestNode().value += @chunk.charAt 0
     
     return 1
 
-  # ast helpers
+  # parseTree helpers
 
   activeBranchNode: -> last(@activeStates)
 
@@ -173,8 +167,8 @@ exports.Parser = Parser = class Parser
   addLeafNodeToActiveBranch: (node) ->
     @activeBranchNode().children.push(node)
 
-  rewriteAttributes: (attributesText) ->
-    astBranchNode CSX_ATTRIBUTES, null, do ->
+  parseCSXAttributes: (attributesText) ->
+    parseTreeBranchNode CSX_ATTRIBUTES, null, do ->
       while attrMatches = TAG_ATTRIBUTES.exec attributesText
         [ attrNameValText, attrName, doubleQuotedVal,
           singleQuotedVal, csEscVal, bareVal ] = attrMatches
@@ -184,29 +178,29 @@ exports.Parser = Parser = class Parser
             first_line: @chunkLine, first_column: @chunkColumn
 
         if doubleQuotedVal # "value"
-          astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            astLeafNode(CSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
+          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
           ])
         else if singleQuotedVal # 'value'
-          astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            astLeafNode(CSX_ATTR_VAL, "'#{singleQuotedVal}'")
+          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CSX_ATTR_VAL, "'#{singleQuotedVal}'")
           ])
         else if csEscVal # {value}
-          astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            astBranchNode(CSX_ESC, null, [astLeafNode(CS, csEscVal)])
+          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeBranchNode(CSX_ESC, null, [parseTreeLeafNode(CS, csEscVal)])
           ])
         else if bareVal # value
-          astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            astLeafNode(CSX_ATTR_VAL, "\"#{bareVal}\"")
+          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CSX_ATTR_VAL, "\"#{bareVal}\"")
           ])
         else
-          astBranchNode(CSX_ATTR_PAIR, null, [
-            astLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            astLeafNode(CSX_ATTR_VAL, 'true')
+          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CSX_ATTR_VAL, 'true')
           ])
 
   # helpers (from cs lexer)
@@ -277,7 +271,7 @@ exports.Parser = Parser = class Parser
     @error "missing #{ stack.pop() }, starting"
 
 
-exports.serialise = serialise = (ast) ->
+exports.serialise = serialise = (parseTree) ->
   serialiseNode = (node) -> serialisers[node.type](node)
 
   genericBranchSerialiser = (node) ->
@@ -331,7 +325,7 @@ exports.serialise = serialise = (ast) ->
     CSX_ATTR_KEY: genericLeafSerialiser
     CSX_ATTR_VAL: genericLeafSerialiser
 
-  serialiseNode(ast)
+  serialiseNode(parseTree)
 
 
 # Constants

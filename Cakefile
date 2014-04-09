@@ -15,9 +15,9 @@ log = (message, color, explanation) ->
 
 # Build transformer from source.
 build = (cb) ->
-  exec 'mkdir', ['-p','bin', 'lib'], ->
+  run 'mkdir', ['-p','bin', 'lib'], ->
     compile ['transformer', 'helpers'], 'src/', 'lib/', ->
-      exec 'cp', ['src/htmlelements.js','lib/htmlelements.js'], cb
+      run 'cp', ['src/htmlelements.js','lib/htmlelements.js'], cb
 
 compile = (srcFiles, srcDir, destDir, cb) ->
   srcFilePaths = srcFiles.map (filename) -> "#{srcDir}/#{filename}.coffee"
@@ -25,9 +25,9 @@ compile = (srcFiles, srcDir, destDir, cb) ->
   coffee args, cb
 
 # Run CoffeeScript command
-coffee = (args, cb) -> exec 'coffee', args, cb
+coffee = (args, cb) -> run 'coffee', args, cb
 
-exec = (executable, args = [], cb) ->
+run = (executable, args = [], cb) ->
   proc =         spawn executable, args
   proc.stdout.on 'data', (buffer) -> log buffer.toString(), green
   proc.stderr.on 'data', (buffer) -> log buffer.toString(), red

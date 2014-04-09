@@ -10,6 +10,5 @@ Car = React.createClass
       <p>Which seat can I take? {@props.seat}</p>
     </Car>
 
-React.renderComponent \
-  <Car seat="front, obvs" />,
+React.renderComponent <Car seat="front, obvs" />,
   document.getElementById 'container'

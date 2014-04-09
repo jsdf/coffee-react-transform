@@ -7,7 +7,7 @@ fs = require 'fs'
 
 start = new Date()
 
-ast = new Parser().parse(fs.readFileSync('./car.csx', 'utf8'))
+parseTree = new Parser().parse(fs.readFileSync('./car.csx', 'utf8'))
 
 '''
 
@@ -66,10 +66,10 @@ React.createClass
 
 
 """
-console.log 'AST:'
-console.log JSON.stringify(ast, null, 4)
-console.log 'Transformed CSX:'
-coffeescriptCode = serialise ast
+console.log 'Parse tree:'
+console.log JSON.stringify(parseTree, null, 4)
+console.log 'Transformed to coffee:'
+coffeescriptCode = serialise parseTree
 console.log coffeescriptCode
 console.log 'Compiled to JS:'
 console.log(coffeeCompile(coffeescriptCode))
