@@ -1,12 +1,7 @@
-
-# tests
-# mainly for regressions, edge cases
-
 transform = require('../src/transformer').transform
 
-# simple testing of string equality of expected output 
-# vs actual output for various csx input
-# should catch any regressions in output
+# simple testing of string equality of 
+# expected output vs actual output
 testTransformOutput = (description, input, expectedOutput) ->
   transformed = transform input
   console.assert transformed == expectedOutput,
@@ -35,7 +30,7 @@ testTransformOutput 'ambigious tag-like expression',
 
 testTransformOutput 'ambigious tag',
 """x = a <b > c </b>""",
-"""x = a React.DOM.b(null, \"\"\"c\"\"\")"""
+"""x = a React.DOM.b(null, \"\"\" c \"\"\")"""
 
 testTransformOutput 'escaped coffeescript attribute',
 """<Person name={window.isLoggedIn ? window.name : ''} />""",
@@ -61,7 +56,7 @@ testTransformOutput 'multiple line escaped coffeescript with nested csx',
 {
 
   for n in a
-    <div>
+    <div> a
       asf
       <li xy={"as"}>{ n+1 }<a /> <a /> </li>
     </div>
@@ -75,7 +70,8 @@ Person({"name": (window.isLoggedIn
 : '')}, (
 
   for n in a
-    React.DOM.div(null, \"\"\"asf\"\"\", React.DOM.li({"xy": ("as")}, ( n+1 ), React.DOM.a(null), React.DOM.a(null)))
+    React.DOM.div(null, \"\"\" a
+      asf\"\"\", React.DOM.li({"xy": ("as")}, ( n+1 ), React.DOM.a(null), \"\"\" \"\"\", React.DOM.a(null), \"\"\" \"\"\"))
 ))
 """
 
@@ -104,8 +100,8 @@ HelloWorld = React.createClass({
 HelloWorld = React.createClass({
   render: () ->
     return (
-      React.DOM.p(null, \"\"\"Hello,\"\"\", React.DOM.input({"type": "text", "placeholder": "Your name here"}), \"\"\"!
-        It is\"\"\", (this.props.date.toTimeString()))
+      React.DOM.p(null, \"\"\"Hello, \"\"\", React.DOM.input({"type": "text", "placeholder": "Your name here"}), \"\"\"!
+        It is \"\"\", (this.props.date.toTimeString()))
     );
 });
 """
@@ -141,7 +137,8 @@ React.createClass
 testTransformOutput 'lots of attributes',
 """
 <Car doors=4 safety={getSafetyRating()*2} crackedWindscreen = "yep" 
-insurance={ insurancehas() ? 'cool': 'ahh noooo'} data-yolo='swag\\' checked check=me_out />
+insurance={ insurancehas() ? 'cool': 'ahh noooo'} data-yolo='swag\\' checked check=me_out 
+/>
 """,
 """
 Car({"doors": "4", "safety": (getSafetyRating()*2), "crackedWindscreen": "yep", "insurance": ( insurancehas() ? 'cool': 'ahh noooo'), "data-yolo": 'swag\\', "checked": true, "check": "me_out"})
@@ -164,7 +161,8 @@ testTransformOutput 'herecomment',
 """
 
 # failing
-# TODO: support regex containing html
+# TODO: support regex containing html which should not be transformed
+
 # testTransformOutput 'regex',
 # """/<Person \/>/""",
 # """/<Person \/>/"""
@@ -191,7 +189,7 @@ testTransformOutput 'string triple double quote',
 
 testTransformOutput 'escaped js cannot be written within csx',
 """<Person> `i am not js` </Person>""",
-"""Person(null, \"\"\"`i am not js`\"\"\")"""
+"""Person(null, \"\"\" `i am not js` \"\"\")"""
 
 testTransformOutput 'comment cannot be written within csx',
 """<Person>
@@ -201,7 +199,7 @@ testTransformOutput 'comment cannot be written within csx',
 
 testTransformOutput 'string cannot be written within csx',
 """<Person> "i am not a string" 'nor am i' </Person>""",
-"""Person(null, \"\"\""i am not a string" 'nor am i'\"\"\")"""
+"""Person(null, \"\"\" "i am not a string" 'nor am i' \"\"\")"""
 
 # end tests
 console.timeEnd('all tests passed')

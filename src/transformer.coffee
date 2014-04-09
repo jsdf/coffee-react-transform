@@ -96,7 +96,7 @@ exports.Parser = Parser = class Parser
     return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
     @pushActiveBranchNode parseTreeBranchNode CSX_EL, tagName
-    @addLeafNodeToActiveBranch @parseCSXAttributes attributesText
+    @addLeafNodeToActiveBranch @csxAttributes attributesText
 
     if selfClosing
       @popActiveBranchNode() # close csx tag
@@ -167,7 +167,7 @@ exports.Parser = Parser = class Parser
   addLeafNodeToActiveBranch: (node) ->
     @activeBranchNode().children.push(node)
 
-  parseCSXAttributes: (attributesText) ->
+  csxAttributes: (attributesText) ->
     parseTreeBranchNode CSX_ATTRIBUTES, null, do ->
       while attrMatches = TAG_ATTRIBUTES.exec attributesText
         [ attrNameValText, attrName, doubleQuotedVal,
@@ -283,6 +283,7 @@ exports.serialise = serialise = (parseTree) ->
 
   serialisers =
     ROOT: genericBranchSerialiser
+
     CSX_EL: (node) ->
       childrenSerialised = node.children
         .map((child) -> serialiseNode child)
@@ -290,12 +291,13 @@ exports.serialise = serialise = (parseTree) ->
         .join(', ')
       prefix = if HTML_ELEMENTS[node.value]? then 'React.DOM.' else ''
       "#{prefix}#{node.value}(#{childrenSerialised})"
+
     CSX_ESC: (node) ->
       childrenSerialised = node.children
         .map((child) -> serialiseNode child)
         .join('')
       "(#{childrenSerialised})"
-    # not implemented yet
+
     CSX_ATTRIBUTES: (node) ->
       if node.children.length
         childrenSerialised = node.children
@@ -303,25 +305,36 @@ exports.serialise = serialise = (parseTree) ->
           .join(', ')
         "{#{childrenSerialised}}"
       else
-        "null"
+        'null'
+
     CSX_ATTR_PAIR: (node) ->
       node.children
         .map((child) -> serialiseNode child)
         .join(': ')
+
     # leaf nodes
     CS: genericLeafSerialiser
     CS_COMMENT: genericLeafSerialiser
     CS_HEREDOC: genericLeafSerialiser
     CS_STRING: genericLeafSerialiser
     JS_ESC: genericLeafSerialiser
+
     CSX_TEXT: (node) ->
-      # current react behaviour is to trim whitespace from text nodes
-      trimmedValue = node.value.trim()
-      if trimmedValue == ''
-        # empty/whitespace-only nodes return null so they can be filtered out
-        null
+      # trim whitespace only if it includes a newline
+      text = node.value
+      leftSpace = text.match TEXT_LEADING_WHITESPACE
+      rightSpace = text.match TEXT_TRAILING_WHITESPACE
+
+      leftTrim = leftSpace and leftSpace[0].length or 0
+      rightTrim = rightSpace and rightSpace.index or text.length
+
+      trimmedText = text.substring(leftTrim, rightTrim)
+
+      if trimmedText == ''
+        null # this text node will be omitted
       else
-        '"""'+trimmedValue+'"""'
+        '"""'+trimmedText+'"""'
+
     CSX_ATTR_KEY: genericLeafSerialiser
     CSX_ATTR_VAL: genericLeafSerialiser
 
@@ -376,6 +389,9 @@ CLOSING_TAG = /^<\/([-A-Za-z0-9_]+)[^>]*>/
 # exec multiple times until null
 TAG_ATTRIBUTES = /([-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|(?:{((?:\\.|[^}])*)})|([^>\s]+)))?/g
 
+# leading and trailing whitespace which contains a newline
+TEXT_LEADING_WHITESPACE = /^\s*?\n\s*/
+TEXT_TRAILING_WHITESPACE = /\s*?\n\s*?$/
 
 # from coffeescript lexer
 
