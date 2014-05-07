@@ -36,7 +36,7 @@ run = (executable, args = [], cb) ->
 
 test = -> coffee ['test/test.coffee']
 
-task 'build', 'build csx transformer from source', build
+task 'build', 'build cjsx transformer from source', build
 
 task 'test', 'run tests', test
 

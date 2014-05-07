@@ -16,12 +16,13 @@ exports.Parser = Parser = class Parser
     @activeStates = [@parseTree] # stack tracking current parse tree position (starting with root)
     @chunkLine = 0 # The start line for the current @chunk.
     @chunkColumn =  0 # The start column of the current @chunk.
+    @cjsxPragmaChecked = false
     code = @clean code # The stripped, cleaned original source code.
 
     i = 0
     while @chunk = code[i..]
       consumed = (
-          if @activeBranchNode().type != CSX_EL
+          if @activeBranchNode().type != CJSX_EL
             @csComment() or
             @csHeredoc() or
             @csString() or
@@ -29,11 +30,11 @@ exports.Parser = Parser = class Parser
         ) or
         # TODO: support regex and heregex
         # @csRegex() or
-        @csxStart() or
-        @csxEscape() or
-        @csxUnescape() or
-        @csxEnd() or
-        @csxText() or
+        @cjsxStart() or
+        @cjsxEscape() or
+        @cjsxUnescape() or
+        @cjsxEnd() or
+        @cjsxText() or
         @coffeescriptCode()
 
       # Update position
@@ -55,8 +56,17 @@ exports.Parser = Parser = class Parser
     return 0 unless match = @chunk.match COMMENT
     [comment, here] = match
 
-    @addLeafNodeToActiveBranch parseTreeLeafNode CS_COMMENT, comment
+    unless @cjsxPragmaChecked
+      @cjsxPragmaChecked = true
+      if pragmaMatch = comment.match PRAGMA
+        if pragmaMatch and pragmaMatch[1] and pragmaMatch[1].length
+          prefix = pragmaMatch[1]
+        else
+          prefix = 'React.DOM'
+        @addLeafNodeToActiveBranch parseTreeLeafNode CJSX_PRAGMA, prefix
+        return comment.length
 
+    @addLeafNodeToActiveBranch parseTreeLeafNode CS_COMMENT, comment
     comment.length
 
   # Matches heredocs
@@ -89,60 +99,60 @@ exports.Parser = Parser = class Parser
 
     script.length
 
-  csxStart: ->
+  cjsxStart: ->
     return 0 unless match = OPENING_TAG.exec @chunk
     [input, tagName, attributesText, unneededJunk, selfClosing] = match
 
     return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
-    @pushActiveBranchNode parseTreeBranchNode CSX_EL, tagName
-    @addLeafNodeToActiveBranch @csxAttributes attributesText
+    @pushActiveBranchNode parseTreeBranchNode CJSX_EL, tagName
+    @addLeafNodeToActiveBranch @cjsxAttributes attributesText
 
     if selfClosing
-      @popActiveBranchNode() # close csx tag
+      @popActiveBranchNode() # close cjsx tag
 
     input.length
 
-  csxEscape: ->
-    return 0 unless @activeBranchNode().type == CSX_EL and @chunk.charAt(0) == '{'
+  cjsxEscape: ->
+    return 0 unless @activeBranchNode().type == CJSX_EL and @chunk.charAt(0) == '{'
 
-    @pushActiveBranchNode parseTreeBranchNode CSX_ESC
+    @pushActiveBranchNode parseTreeBranchNode CJSX_ESC
     return 1
 
-  csxUnescape: ->
-    return 0 unless @activeBranchNode().type == CSX_ESC and @chunk.charAt(0) == '}'
+  cjsxUnescape: ->
+    return 0 unless @activeBranchNode().type == CJSX_ESC and @chunk.charAt(0) == '}'
     
-    @popActiveBranchNode() # close csx escape
+    @popActiveBranchNode() # close cjsx escape
     return 1
 
-  csxEnd: ->
-    return 0 unless @activeBranchNode().type == CSX_EL
+  cjsxEnd: ->
+    return 0 unless @activeBranchNode().type == CJSX_EL
     return 0 unless match = CLOSING_TAG.exec @chunk
     [input, tagName] = match
 
     unless tagName == @activeBranchNode().value
       throwSyntaxError \
-        "CSX_START tag #{@activeBranchNode().value} doesn't match CSX_END tag #{tagName}",
+        "CJSX_START tag #{@activeBranchNode().value} doesn't match CJSX_END tag #{tagName}",
         first_line: @chunkLine, first_column: @chunkColumn
 
-    @popActiveBranchNode() # close csx tag
+    @popActiveBranchNode() # close cjsx tag
 
     input.length
 
-  csxText: ->
-    return 0 unless @activeBranchNode().type == CSX_EL
+  cjsxText: ->
+    return 0 unless @activeBranchNode().type == CJSX_EL
 
-    unless @newestNode().type == CSX_TEXT
-      @addLeafNodeToActiveBranch parseTreeLeafNode CSX_TEXT, '' # init value as string
+    unless @newestNode().type == CJSX_TEXT
+      @addLeafNodeToActiveBranch parseTreeLeafNode CJSX_TEXT, '' # init value as string
 
-    # newestNode is (now) CSX_TEXT
+    # newestNode is (now) CJSX_TEXT
     @newestNode().value += @chunk.charAt 0
 
     return 1
 
   # fallthrough
   coffeescriptCode: ->
-    # return 0 unless @activeBranchNode().type == ROOT or @activeBranchNode().type == CSX_ESC
+    # return 0 unless @activeBranchNode().type == ROOT or @activeBranchNode().type == CJSX_ESC
     
     unless @newestNode().type == CS
       @addLeafNodeToActiveBranch parseTreeLeafNode CS, '' # init value as string
@@ -167,8 +177,8 @@ exports.Parser = Parser = class Parser
   addLeafNodeToActiveBranch: (node) ->
     @activeBranchNode().children.push(node)
 
-  csxAttributes: (attributesText) ->
-    parseTreeBranchNode CSX_ATTRIBUTES, null, do ->
+  cjsxAttributes: (attributesText) ->
+    parseTreeBranchNode CJSX_ATTRIBUTES, null, do ->
       while attrMatches = TAG_ATTRIBUTES.exec attributesText
         [ attrNameValText, attrName, doubleQuotedVal,
           singleQuotedVal, csEscVal, bareVal ] = attrMatches
@@ -178,29 +188,29 @@ exports.Parser = Parser = class Parser
             first_line: @chunkLine, first_column: @chunkColumn
 
         if doubleQuotedVal # "value"
-          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
-            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            parseTreeLeafNode(CSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
+          parseTreeBranchNode(CJSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CJSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CJSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
           ])
         else if singleQuotedVal # 'value'
-          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
-            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            parseTreeLeafNode(CSX_ATTR_VAL, "'#{singleQuotedVal}'")
+          parseTreeBranchNode(CJSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CJSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
           ])
         else if csEscVal # {value}
-          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
-            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            parseTreeBranchNode(CSX_ESC, null, [parseTreeLeafNode(CS, csEscVal)])
+          parseTreeBranchNode(CJSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CJSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeBranchNode(CJSX_ESC, null, [parseTreeLeafNode(CS, csEscVal)])
           ])
         else if bareVal # value
-          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
-            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            parseTreeLeafNode(CSX_ATTR_VAL, "\"#{bareVal}\"")
+          parseTreeBranchNode(CJSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CJSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CJSX_ATTR_VAL, "\"#{bareVal}\"")
           ])
         else
-          parseTreeBranchNode(CSX_ATTR_PAIR, null, [
-            parseTreeLeafNode(CSX_ATTR_KEY, "\"#{attrName}\"")
-            parseTreeLeafNode(CSX_ATTR_VAL, 'true')
+          parseTreeBranchNode(CJSX_ATTR_PAIR, null, [
+            parseTreeLeafNode(CJSX_ATTR_KEY, "\"#{attrName}\"")
+            parseTreeLeafNode(CJSX_ATTR_VAL, 'true')
           ])
 
   # helpers (from cs lexer)
@@ -272,6 +282,13 @@ exports.Parser = Parser = class Parser
 
 
 exports.serialise = serialise = (parseTree) ->
+  if parseTree.children and
+  parseTree.children.length and
+  parseTree.children[0].type is CJSX_PRAGMA
+    htmlElementClass = parseTree.children[0].value
+  else
+    htmlElementClass = 'React.DOM'
+
   serialiseNode = (node) -> serialisers[node.type](node)
 
   genericBranchSerialiser = (node) ->
@@ -284,21 +301,23 @@ exports.serialise = serialise = (parseTree) ->
   serialisers =
     ROOT: genericBranchSerialiser
 
-    CSX_EL: (node) ->
+    CJSX_PRAGMA: -> null
+
+    CJSX_EL: (node) ->
       childrenSerialised = node.children
         .map((child) -> serialiseNode child)
         .filter((child) -> child?) # filter empty text nodes
         .join(', ')
-      prefix = if HTML_ELEMENTS[node.value]? then 'React.DOM.' else ''
+      prefix = if HTML_ELEMENTS[node.value]? then htmlElementClass+'.' else ''
       "#{prefix}#{node.value}(#{childrenSerialised})"
 
-    CSX_ESC: (node) ->
+    CJSX_ESC: (node) ->
       childrenSerialised = node.children
         .map((child) -> serialiseNode child)
         .join('')
       "(#{childrenSerialised})"
 
-    CSX_ATTRIBUTES: (node) ->
+    CJSX_ATTRIBUTES: (node) ->
       if node.children.length
         childrenSerialised = node.children
           .map((child) -> serialiseNode child)
@@ -307,7 +326,7 @@ exports.serialise = serialise = (parseTree) ->
       else
         'null'
 
-    CSX_ATTR_PAIR: (node) ->
+    CJSX_ATTR_PAIR: (node) ->
       node.children
         .map((child) -> serialiseNode child)
         .join(': ')
@@ -319,7 +338,7 @@ exports.serialise = serialise = (parseTree) ->
     CS_STRING: genericLeafSerialiser
     JS_ESC: genericLeafSerialiser
 
-    CSX_TEXT: (node) ->
+    CJSX_TEXT: (node) ->
       # trim whitespace only if it includes a newline
       text = node.value
       leftSpace = text.match TEXT_LEADING_WHITESPACE
@@ -335,8 +354,8 @@ exports.serialise = serialise = (parseTree) ->
       else
         '"""'+trimmedText+'"""'
 
-    CSX_ATTR_KEY: genericLeafSerialiser
-    CSX_ATTR_VAL: genericLeafSerialiser
+    CJSX_ATTR_KEY: genericLeafSerialiser
+    CJSX_ATTR_VAL: genericLeafSerialiser
 
   serialiseNode(parseTree)
 
@@ -346,10 +365,10 @@ exports.serialise = serialise = (parseTree) ->
 
 # branch (state) node types
 ROOT = 'ROOT'
-CSX_EL = 'CSX_EL'
-CSX_ESC = 'CSX_ESC'
-CSX_ATTRIBUTES = 'CSX_ATTRIBUTES'
-CSX_ATTR_PAIR = 'CSX_ATTR_PAIR'
+CJSX_EL = 'CJSX_EL'
+CJSX_ESC = 'CJSX_ESC'
+CJSX_ATTRIBUTES = 'CJSX_ATTRIBUTES'
+CJSX_ATTR_PAIR = 'CJSX_ATTR_PAIR'
 
 # leaf (value) node types
 CS = 'CS'
@@ -357,17 +376,18 @@ CS_COMMENT = 'CS_COMMENT'
 CS_HEREDOC = 'CS_HEREDOC'
 CS_STRING = 'CS_STRING'
 JS_ESC = 'JS_ESC'
-CSX_TEXT = 'CSX_TEXT'
-CSX_ATTR_KEY = 'CSX_ATTR_KEY'
-CSX_ATTR_VAL = 'CSX_ATTR_VAL'
+CJSX_TEXT = 'CJSX_TEXT'
+CJSX_ATTR_KEY = 'CJSX_ATTR_KEY'
+CJSX_ATTR_VAL = 'CJSX_ATTR_VAL'
 
 # tokens
 # these aren't really used as there aren't distinct lex/parse steps
 # they're just names for use in debugging
-CSX_START = 'CSX_START'
-CSX_END = 'CSX_END'
-CSX_ESC_START = 'CSX_ESC_START'
-CSX_ESC_END = 'CSX_ESC_END'
+CJSX_START = 'CJSX_START'
+CJSX_END = 'CJSX_END'
+CJSX_ESC_START = 'CJSX_ESC_START'
+CJSX_ESC_END = 'CJSX_ESC_END'
+CJSX_PRAGMA = 'CJSX_PRAGMA'
 
 # JSX tag matching regexes
 
@@ -392,6 +412,8 @@ TAG_ATTRIBUTES = /([-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.
 # leading and trailing whitespace which contains a newline
 TEXT_LEADING_WHITESPACE = /^\s*?\n\s*/
 TEXT_TRAILING_WHITESPACE = /\s*?\n\s*?$/
+
+PRAGMA = /^\s*#\s*@cjsx\s+(\S*)/
 
 # from coffeescript lexer
 

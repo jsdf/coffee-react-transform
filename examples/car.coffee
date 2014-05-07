@@ -1,4 +1,4 @@
-# @csx React.DOM 
+# @cjsx React.DOM 
 
 React = require('react')
 

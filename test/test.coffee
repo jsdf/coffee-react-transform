@@ -48,7 +48,7 @@ Person({"name": (window.isLoggedIn
 : '')})
 """
 
-testTransformOutput 'multiple line escaped coffeescript with nested csx',
+testTransformOutput 'multiple line escaped coffeescript with nested cjsx',
 """
 <Person name={window.isLoggedIn 
 ? window.name 
@@ -84,7 +84,7 @@ loltags='on new line' />
 Person({"name": (window.isLoggedIn ? window.name : ''), "loltags": 'on new line'})
 """
 
-testTransformOutput 'example react class with csx, text and escaped coffeescript',
+testTransformOutput 'example react class with cjsx, text and escaped coffeescript',
 """
 HelloWorld = React.createClass({
   render: () ->
@@ -187,17 +187,17 @@ testTransformOutput 'string triple double quote',
 '''"""<Person />"""''',
 '''"""<Person />"""'''
 
-testTransformOutput 'escaped js cannot be written within csx',
+testTransformOutput 'escaped js cannot be written within cjsx',
 """<Person> `i am not js` </Person>""",
 """Person(null, \"\"\" `i am not js` \"\"\")"""
 
-testTransformOutput 'comment cannot be written within csx',
+testTransformOutput 'comment cannot be written within cjsx',
 """<Person>
 # i am not a comment
 </Person>""",
 """Person(null, \"\"\"# i am not a comment\"\"\")"""
 
-testTransformOutput 'string cannot be written within csx',
+testTransformOutput 'string cannot be written within cjsx',
 """<Person> "i am not a string" 'nor am i' </Person>""",
 """Person(null, \"\"\" "i am not a string" 'nor am i' \"\"\")"""
 

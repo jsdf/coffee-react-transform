@@ -5,11 +5,11 @@
     "coffeescript",
     "react",
     "jsx",
-    "csx",
+    "cjsx",
     "coffee-react"
   ],
   "author": "James Friend",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "licenses": [
     {
       "type": "MIT",
@@ -22,6 +22,7 @@
   },
   "files": ["index.js","lib/","bin/"],
   "bin": {
+    "cjsx-transform": "./bin/cjsx-transform",
     "csx-transform": "./bin/csx-transform"
   },
   "homepage": "https://github.com/jsdf/coffee-react-transform",
