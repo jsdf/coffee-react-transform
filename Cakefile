@@ -1,4 +1,5 @@
 fs = require 'fs'
+path = require 'path'
 {spawn, exec} = require 'child_process'
 
 # ANSI Terminal Colors.
@@ -11,6 +12,7 @@ unless process.env.NODE_DISABLE_COLORS
 
 
 SOURCEFILES = ['transformer', 'parser', 'serialiser', 'symbols', 'helpers']
+JSFILES = ['htmlelements.js', 'occurrences.js', 'stringescape.js']
   
 # Log a message with a color.
 log = (message, color, explanation) ->
@@ -20,15 +22,19 @@ log = (message, color, explanation) ->
 build = (cb) ->
   run 'mkdir', ['-p','bin', 'lib'], ->
     compile SOURCEFILES, 'src/', 'lib/', ->
-      run 'cp', ['src/htmlelements.js','lib/htmlelements.js'], cb
+      copy JSFILES, 'src/', 'lib/', cb
+
+copy = (srcFiles, srcDir, destDir, cb) ->
+  files = srcFiles.map((filename) -> path.join(srcDir, filename))
+  run 'cp', files.concat([destDir]), cb
 
 compile = (srcFiles, srcDir, destDir, cb) ->
   args = [
     '--bare',
     '--output', destDir,
     '--compile'
-  ].concat srcFiles.map((filename) -> "#{srcDir}/#{filename}.coffee")
-  
+  ].concat srcFiles.map((filename) -> path.join(srcDir, "#{filename}.coffee"))
+
   coffee args, cb
 
 # Run CoffeeScript command
