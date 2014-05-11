@@ -200,7 +200,7 @@ module.exports = class Parser
           else if bareVal # value
             parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
               parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-              parseTreeLeafNode($.CJSX_ATTR_VAL, "\"#{bareVal}\"")
+              parseTreeLeafNode($.CJSX_ATTR_VAL, bareVal)
             ])
           else
             parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [

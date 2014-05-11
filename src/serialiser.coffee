@@ -46,13 +46,24 @@ serialise.serialisers = serialisers =
   CJSX_PRAGMA: -> null
 
   CJSX_EL: (node, env) ->
-    childrenSerialised = node.children
-      .map((child) -> env.serialiseNode child)
-      .filter((child) -> child?) # filter empty text nodes
-      .join(', ')
+    serialisedChildren = []
+    accumulatedWhitespace = ''
+
+    node.children.forEach (child) ->
+      serialisedChild = env.serialiseNode child
+      if child? # filter empty text nodes
+        if WHITESPACE_ONLY.test serialisedChild
+          accumulatedWhitespace += serialisedChild.replace('\n','\\\n')
+        else
+          serialisedChildren.push(accumulatedWhitespace + serialisedChild)
+          accumulatedWhitespace = ''
+
+    if serialisedChildren.length
+      serialisedChildren[serialisedChildren.length-1] += accumulatedWhitespace
+      accumulatedWhitespace = ''
 
     prefix = if HTML_ELEMENTS[node.value]? then env.domObject+'.' else ''
-    prefix+node.value+'('+childrenSerialised+')'
+    prefix+node.value+'('+serialisedChildren.join(', ')+')'
 
   CJSX_ESC: (node, env) ->
     childrenSerialised = node.children
@@ -103,21 +114,32 @@ serialise.serialisers = serialisers =
   CJSX_TEXT: (node) ->
     # trim whitespace only if it includes a newline
     text = node.value
-    if containsNewlines(text) and WHITESPACE_ONLY.test text
-      text.replace('\n','\\\n')
+    if containsNewlines(text)
+      if WHITESPACE_ONLY.test text
+        text
+      else
+        leftSpace = text.match TEXT_LEADING_WHITESPACE
+        rightSpace = text.match TEXT_TRAILING_WHITESPACE
+
+        if leftSpace 
+          leftTrim = text.indexOf('\n')
+        else 
+          leftTrim = 0
+
+        if rightSpace
+          rightTrim = text.lastIndexOf('\n')+1
+        else
+          rightTrim = text.length
+
+        trimmedText = text.substring(leftTrim, rightTrim)
+        '"""'+trimmedText+'"""'
+        # '"""'+text+'"""'
+
     else
-      leftSpace = text.match TEXT_LEADING_WHITESPACE
-      rightSpace = text.match TEXT_TRAILING_WHITESPACE
-
-      leftTrim = leftSpace and leftSpace[0].length or 0
-      rightTrim = rightSpace and rightSpace.index or text.length
-
-      trimmedText = text.substring(leftTrim, rightTrim)
-
-      if trimmedText == ''
+      if text == ''
         null # this text node will be omitted
       else
-        '"""'+trimmedText+'"""'
+        '"'+text+'"'
 
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser
@@ -128,7 +150,7 @@ containsNewlines = (text) -> text.indexOf('\n') > -1
 
 SPACES_ONLY = /^\s+$/
 
-WHITESPACE_ONLY = /^[^\n\S]+$/
+WHITESPACE_ONLY = /^[\n\s]+$/
 
 # leading and trailing whitespace which contains a newline
 TEXT_LEADING_WHITESPACE = /^\s*?\n\s*/
