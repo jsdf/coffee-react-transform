@@ -8,6 +8,9 @@ unless process.env.NODE_DISABLE_COLORS
   red   = '\x1B[0;31m'
   green = '\x1B[0;32m'
   reset = '\x1B[0m'
+
+
+SOURCEFILES = ['transformer', 'parser', 'serialiser', 'symbols', 'helpers']
   
 # Log a message with a color.
 log = (message, color, explanation) ->
@@ -16,12 +19,16 @@ log = (message, color, explanation) ->
 # Build transformer from source.
 build = (cb) ->
   run 'mkdir', ['-p','bin', 'lib'], ->
-    compile ['transformer', 'helpers'], 'src/', 'lib/', ->
+    compile SOURCEFILES, 'src/', 'lib/', ->
       run 'cp', ['src/htmlelements.js','lib/htmlelements.js'], cb
 
 compile = (srcFiles, srcDir, destDir, cb) ->
-  srcFilePaths = srcFiles.map (filename) -> "#{srcDir}/#{filename}.coffee"
-  args = ['--bare', '-o', destDir, '--compile'].concat srcFilePaths
+  args = [
+    '--bare',
+    '--output', destDir,
+    '--compile'
+  ].concat srcFiles.map((filename) -> "#{srcDir}/#{filename}.coffee")
+  
   coffee args, cb
 
 # Run CoffeeScript command
@@ -41,6 +48,7 @@ task 'build', 'build cjsx transformer from source', build
 task 'test', 'run tests', test
 
 task 'watch:test', 'watch and run tests', ->
-  fs.watchFile 'src/transformer.coffee', interval: 1000, test
   fs.watchFile 'test/test.coffee', interval: 1000, test
+  SOURCEFILES.forEach (sourcefile) ->
+    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, test
   log "watching..." , green
