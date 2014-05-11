@@ -1,11 +1,14 @@
 
 {last} = require './helpers'
+{inspect} = require 'util'
 
 $ = require './symbols'
 
 HTML_ELEMENTS = require('./htmlelements')
 
 stringEscape = require './stringescape'
+
+occurrences = require './occurrences'
 
 module.exports = serialise = (parseTree) ->
   env = {serialiseNode}
@@ -20,9 +23,15 @@ module.exports = serialise = (parseTree) ->
 
 serialiseNode = (node) ->
   unless serialisers[node.type]?
-    throw new Error('unknown parseTree node type')
+    throw new Error("unknown parseTree node type #{node.type}")
 
-  serialisers[node.type](node, this)
+  serialised = serialisers[node.type](node, this)
+
+  unless typeof serialised is 'string' or serialised is null
+    throw new Error("serialiser #{node.type} didn\'t return a string for node #{inspect(node)}, instead returned #{serialised}")
+
+  serialised
+
 
 genericBranchSerialiser = (node, env) ->
   node.children
@@ -49,7 +58,6 @@ serialise.serialisers = serialisers =
     childrenSerialised = node.children
       .map((child) -> env.serialiseNode child)
       .join('')
-
     '('+childrenSerialised+')'
 
   CJSX_ATTRIBUTES: (node, env) ->
@@ -65,8 +73,8 @@ serialise.serialisers = serialisers =
         .map (child) ->
           serialised = env.serialiseNode child
           if child.type is $.CJSX_WHITESPACE
-            if serialised.indexOf('\n') > -1
-              serialised
+            if containsNewlines(serialised)
+              serialised.replace('\n',' \\\n')
             else
               null # whitespace without newlines is not significant
           else if child is lastNonWhitespaceChild
@@ -92,43 +100,37 @@ serialise.serialisers = serialisers =
   JS_ESC: genericLeafSerialiser
   CJSX_WHITESPACE: genericLeafSerialiser
 
-  CJSX_TEXT: (node, env) ->
-    # maintain line number parity
-    # whitespace-only lines become empty strings
-    lines = node.value.split('\n')
-    firstLine = lines[0]
-    lastLine = last(lines)
+  CJSX_TEXT: (node) ->
+    # trim whitespace only if it includes a newline
+    text = node.value
+    if containsNewlines(text) and WHITESPACE_ONLY.test text
+      text.replace('\n','\\\n')
+    else
+      leftSpace = text.match TEXT_LEADING_WHITESPACE
+      rightSpace = text.match TEXT_TRAILING_WHITESPACE
 
-    emptyString = ''
-    emptyLine = "''"
+      leftTrim = leftSpace and leftSpace[0].length or 0
+      rightTrim = rightSpace and rightSpace.index or text.length
 
-    trimmedLines = lines.map (line) ->
-      if lines is null or line is emptyString or (
-        lines.length > 1 and 
-        (line is firstLine or line is lastLine) and 
-        SPACES_ONLY.test line
-      )
-        emptyLine
+      trimmedText = text.substring(leftTrim, rightTrim)
+
+      if trimmedText == ''
+        null # this text node will be omitted
       else
-        '"'+stringEscape(line)+'"'
-
-    if lines.length > 1
-      trimmedText = trimmedLines.join('+\n')
-      # if trimmedLines.filter((line) -> line isnt emptyLine).length
-      #   trimmedText = trimmedLines.join('+\n')
-      # else
-      #   trimmedText = Array(trimmedLines.length).join('\n')
-    else
-      trimmedText = trimmedLines[0]
-
-
-    if trimmedText is emptyString or trimmedText is emptyLine
-      null # this text node will be omitted
-    else
-      trimmedText
+        '"""'+trimmedText+'"""'
 
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser
 
+
+
+containsNewlines = (text) -> text.indexOf('\n') > -1
+
 SPACES_ONLY = /^\s+$/
+
+WHITESPACE_ONLY = /^[^\n\S]+$/
+
+# leading and trailing whitespace which contains a newline
+TEXT_LEADING_WHITESPACE = /^\s*?\n\s*/
+TEXT_TRAILING_WHITESPACE = /\s*?\n\s*?$/
 

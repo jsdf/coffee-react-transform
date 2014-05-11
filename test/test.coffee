@@ -1,9 +1,11 @@
+{exec} = require 'child_process'
 {transform} = require '../src/transformer'
 
 # simple testing of string equality of 
 # expected output vs actual output
 testTransformOutput = (description, input, expectedOutput) ->
   transformed = transform input
+
   console.assert transformed == expectedOutput,
   """
 
@@ -30,7 +32,7 @@ testTransformOutput 'ambigious tag-like expression',
 
 testTransformOutput 'ambigious tag',
 """x = a <b > c </b>""",
-"""x = a React.DOM.b(null, \" c \")"""
+"""x = a React.DOM.b(null, \"\"\" c \"\"\")"""
 
 testTransformOutput 'escaped coffeescript attribute',
 """<Person name={window.isLoggedIn ? window.name : ''} />""",
@@ -50,11 +52,9 @@ Person({"name": (window.isLoggedIn
 
 testTransformOutput 'multiple line escaped coffeescript with nested cjsx',
 """
-<Person name={
-  if window.isLoggedIn 
-    window.name 
-  else ''
-}> 
+<Person name={window.isLoggedIn 
+? window.name 
+: ''}> 
 {
 
   for n in a
@@ -72,18 +72,18 @@ Person({"name": (window.isLoggedIn
 : '')}, (
 
   for n in a
-    React.DOM.div(null, \" a
-      asf\", React.DOM.li({"xy": ("as")}, ( n+1 ), React.DOM.a(null), \" \", React.DOM.a(null), \" \"))
+    React.DOM.div(null, \"\"\" a
+      asf\"\"\", React.DOM.li({"xy": ("as")}, ( n+1 ), React.DOM.a(null), \"\"\" \"\"\", React.DOM.a(null), \"\"\" \"\"\"))
 ))
 """
 
 testTransformOutput 'multiline tag attributes with escaped coffeescript',
 """
-<Person name={window.isLoggedIn ? window.name : ''} 
+<Person name={window.isLoggedIn ? window.name : ''}
 loltags='on new line' />
 """,
 """
-Person({"name": (window.isLoggedIn ? window.name : ''),  
+Person({"name": (window.isLoggedIn ? window.name : ''),  \\
 "loltags": 'on new line'})
 """
 
@@ -103,8 +103,8 @@ HelloWorld = React.createClass({
 HelloWorld = React.createClass({
   render: () ->
     return (
-      React.DOM.p(null, \"Hello, \", React.DOM.input({"type": "text", "placeholder": "Your name here"}), \"!
-        It is \", (this.props.date.toTimeString()))
+      React.DOM.p(null, \"\"\"Hello, \"\"\", React.DOM.input({"type": "text", "placeholder": "Your name here"}), \"\"\"!
+        It is \"\"\", (this.props.date.toTimeString()))
     );
 });
 """
@@ -134,18 +134,18 @@ setInterval(() ->
 
 React.createClass
   render: ->
-    return Nav({"color": "blue"}, (Profile(null, \"click\", (Math.random(),Selfclosing({"coolattr": true}))) for i in [start...finish]))
+    return Nav({"color": "blue"}, (Profile(null, \"\"\"click\"\"\", (Math.random(),Selfclosing({"coolattr": true}))) for i in [start...finish]))
 """
 
 testTransformOutput 'lots of attributes',
 """
-<Car doors=4 safety={getSafetyRating()*2} crackedWindscreen = "yep" 
-insurance={ insurancehas() ? 'cool': 'ahh noooo'} data-yolo='swag\\' checked check=me_out 
+<Car doors=4 safety={getSafetyRating()*2} crackedWindscreen = "yep"
+insurance={ insurancehas() ? 'cool': 'ahh noooo'} data-yolo='swag\\' checked check=me_out
 />
 """,
 """
-Car({"doors": "4", "safety": (getSafetyRating()*2), "crackedWindscreen": "yep",  
-"insurance": ( insurancehas() ? 'cool': 'ahh noooo'), "data-yolo": 'swag\\', "checked": true, "check": "me_out" 
+Car({"doors": "4", "safety": (getSafetyRating()*2), "crackedWindscreen": "yep",  \\
+"insurance": ( insurancehas() ? 'cool': 'ahh noooo'), "data-yolo": 'swag\\', "checked": true, "check": "me_out" \\
 })
 """
 
@@ -194,17 +194,17 @@ testTransformOutput 'string triple double quote',
 
 testTransformOutput 'escaped js cannot be written within cjsx',
 """<Person> `i am not js` </Person>""",
-"""Person(null, \" `i am not js` \")"""
+"""Person(null, \"\"\" `i am not js` \"\"\")"""
 
 testTransformOutput 'comment cannot be written within cjsx',
 """<Person>
 # i am not a comment
 </Person>""",
-"""Person(null, \"# i am not a comment\")"""
+"""Person(null, \"\"\"# i am not a comment\"\"\")"""
 
 testTransformOutput 'string cannot be written within cjsx',
 """<Person> "i am not a string" 'nor am i' </Person>""",
-"""Person(null, \" "i am not a string" 'nor am i' \")"""
+"""Person(null, \"\"\" "i am not a string" 'nor am i' \"\"\")"""
 
 # end tests
 console.timeEnd('all tests passed')
