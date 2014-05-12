@@ -216,6 +216,16 @@ awesome.fun.div(null, \"\"\" a
 )
 """
 
+testTransformOutput 'pragma is case insensitive',
+"""
+# @cJSX cool
+<div> a </div>
+""",
+"""
+
+cool.div(null, \" a \")
+"""
+
 testTransformOutput 'comment',
 """# <Person />""",
 """# <Person />"""

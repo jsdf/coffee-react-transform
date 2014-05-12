@@ -302,7 +302,7 @@ CLOSING_TAG = /^<\/([-A-Za-z0-9_]+)[^>]*>/
 # [6] whitespace
 TAG_ATTRIBUTES = /(?:([-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|(?:{((?:\\.|[^}])*)})|([^>\s]+)))?)|([\s\n]+)/g
 
-PRAGMA = /^\s*#\s*@cjsx\s+(\S*)/
+PRAGMA = /^\s*#\s*@cjsx\s+(\S*)/i
 
 # from coffeescript lexer
 
