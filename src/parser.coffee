@@ -131,7 +131,7 @@ module.exports = class Parser
 
     unless tagName is @activeBranchNode().value
       throwSyntaxError \
-        "$.CJSX_START tag #{@activeBranchNode().value} doesn't match $.CJSX_END tag #{tagName}",
+        "opening CJSX tag #{@activeBranchNode().value} doesn't match closing CJSX tag #{tagName}",
         first_line: @chunkLine, first_column: @chunkColumn
 
     @popActiveBranchNode() # close cjsx tag

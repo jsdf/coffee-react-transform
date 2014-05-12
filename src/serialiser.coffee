@@ -49,11 +49,11 @@ serialise.serialisers = serialisers =
     serialisedChildren = []
     accumulatedWhitespace = ''
 
-    node.children.forEach (child) ->
+    for child in node.children
       serialisedChild = env.serialiseNode child
       if child? # filter empty text nodes
         if WHITESPACE_ONLY.test serialisedChild
-          accumulatedWhitespace += serialisedChild.replace('\n','\\\n')
+          accumulatedWhitespace += serialisedChild
         else
           serialisedChildren.push(accumulatedWhitespace + serialisedChild)
           accumulatedWhitespace = ''
@@ -72,29 +72,44 @@ serialise.serialisers = serialisers =
     '('+childrenSerialised+')'
 
   CJSX_ATTRIBUTES: (node, env) ->
-    # whitespace (particularly newlines) must be maintained for attrs
+    # whitespace (particularly newlines) must be maintained
     # to ensure line number parity
-    nonWhitespaceChildren = node.children.filter (child) ->
-      child.type isnt $.CJSX_WHITESPACE
     
-    lastNonWhitespaceChild = last(nonWhitespaceChildren)
+    # sort children into whitespace and semantic (non whitespace) groups
+    # this seems wrong :\
+    [whitespaceChildren, semanticChildren] = node.children.reduce((partitionedChildren, child) ->
+      if child.type is $.CJSX_WHITESPACE
+        partitionedChildren[0].push child
+      else
+        partitionedChildren[1].push child
+      partitionedChildren
+    , [[],[]])
 
-    if nonWhitespaceChildren.length
-      childrenSerialised = node.children
-        .map (child) ->
-          serialised = env.serialiseNode child
-          if child.type is $.CJSX_WHITESPACE
-            if containsNewlines(serialised)
-              serialised.replace('\n',' \\\n')
+    indexOfLastSemanticChild = node.children.lastIndexOf(last(semanticChildren))
+
+    isBeforeLastSemanticChild = (childIndex) ->
+      childIndex < indexOfLastSemanticChild
+
+    if semanticChildren.length
+      serialisedChildren = for child, childIndex in node.children
+        serialisedChild = env.serialiseNode child
+        if child.type is $.CJSX_WHITESPACE
+          if containsNewlines(serialisedChild)
+            if isBeforeLastSemanticChild(childIndex)
+              # escaping newlines within attr object helps avoid 
+              # parse errors in tags which span multiple lines
+              serialisedChild.replace('\n',' \\\n')
             else
-              null # whitespace without newlines is not significant
-          else if child is lastNonWhitespaceChild
-            serialised
+              # but escaped newline at end of attr object is not allowed
+              serialisedChild
           else
-            serialised+', '
-        .join('')
+            null # whitespace without newlines is not significant
+        else if isBeforeLastSemanticChild(childIndex)
+          serialisedChild+', '
+        else
+          serialisedChild
         
-      '{'+childrenSerialised+'}'
+      '{'+serialisedChildren.join('')+'}'
     else
       'null'
 
@@ -143,7 +158,6 @@ serialise.serialisers = serialisers =
 
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser
-
 
 
 containsNewlines = (text) -> text.indexOf('\n') > -1
