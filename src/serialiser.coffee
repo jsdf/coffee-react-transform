@@ -123,6 +123,8 @@ serialise.serialisers = serialisers =
   CS_COMMENT: genericLeafSerialiser
   CS_HEREDOC: genericLeafSerialiser
   CS_STRING: genericLeafSerialiser
+  CS_REGEX: genericLeafSerialiser
+  CS_HEREGEX: genericLeafSerialiser
   JS_ESC: genericLeafSerialiser
   CJSX_WHITESPACE: genericLeafSerialiser
 

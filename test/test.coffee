@@ -245,9 +245,9 @@ testTransformOutput 'herecomment',
 # failing
 # TODO: support regex containing html which should not be transformed
 
-# testTransformOutput 'regex',
-# """/<Person \/>/""",
-# """/<Person \/>/"""
+testTransformOutput 'regex',
+"""/<Person \/>/""",
+"""/<Person \/>/"""
 
 testTransformOutput 'js escaped',
 """`<Person />`""",

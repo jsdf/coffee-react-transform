@@ -25,10 +25,9 @@ module.exports = class Parser
             @csComment() or
             @csHeredoc() or
             @csString() or
-            @jsEscaped()
+            @csRegex() or
+            @jsEscaped() # TODO: support regex and heregex
         ) or
-        # TODO: support regex and heregex
-        # @csRegex() or
         @cjsxStart() or
         @cjsxEscape() or
         @cjsxUnescape() or
@@ -88,6 +87,33 @@ module.exports = class Parser
     @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_STRING, string
 
     string.length
+
+
+  csRegex: ->
+    return 0 if @chunk.charAt(0) isnt '/'
+    return length if length = @csHeregex()
+
+    # clever js regex heuristics should go here...
+    # except as we haven't actually parsed most of the code,
+    # we can't look at tokens to figure out if this is actually division
+    # maybe search backward and do a hacky sort of mini parse?
+
+    return 0 unless match = REGEX.exec @chunk
+    [match, regex, flags] = match
+    return 0 if regex.indexOf("\n") > -1 # no newlines in a normal regex
+    # Avoid conflicts with floor division operator.
+    return 0 if regex is '//'
+    @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_REGEX, match
+    match.length
+
+  # Matches multiline extended regular expressions.
+  csHeregex: ->
+    return 0 unless match = HEREGEX.exec @chunk
+    [heregex, body, flags] = match
+
+    @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_HEREGEX, heregex
+
+    heregex.length
 
   # Matches JavaScript interpolated directly into the source via backticks.
   jsEscaped: ->
@@ -322,5 +348,19 @@ SIMPLESTR  = /^'[^\\']*(?:\\[\s\S][^\\']*)*'/
 
 JSTOKEN    = /^`[^\\`]*(?:\\.[^\\`]*)*`/
 
+# Regex-matching-regexes.
+REGEX = /// ^
+  (/ (?! [\s=] )   # disallow leading whitespace or equals signs
+  [^ [ / \n \\ ]*  # every other thing
+  (?:
+    (?: \\[\s\S]   # anything escaped
+      | \[         # character class
+           [^ \] \n \\ ]*
+           (?: \\[\s\S] [^ \] \n \\ ]* )*
+         ]
+    ) [^ [ / \n \\ ]*
+  )*
+  /) ([imgy]{0,4}) (?!\w)
+///
 
-
+HEREGEX      = /// ^ /{3} ((?:\\?[\s\S])+?) /{3} ([imgy]{0,4}) (?!\w) ///
