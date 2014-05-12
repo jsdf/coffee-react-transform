@@ -20,7 +20,11 @@
     "test": "cake test",
     "prepublish": "cake build"
   },
-  "files": ["index.js","lib/","bin/"],
+  "files": [
+    "index.js",
+    "lib/",
+    "bin/"
+  ],
   "bin": {
     "cjsx-transform": "./bin/cjsx-transform",
     "csx-transform": "./bin/csx-transform"
@@ -30,5 +34,8 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/jsdf/coffee-react-transform.git"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.7.1"
   }
 }

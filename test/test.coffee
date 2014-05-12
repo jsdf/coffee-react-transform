@@ -1,5 +1,17 @@
 {exec} = require 'child_process'
+coffeeEval = require('coffee-script').eval
 {transform} = require '../src/transformer'
+coffeeEvalOpts =
+  sandbox:
+    React: require './react' # mock react for tests  
+    # stub methods
+    sink: ->
+    call: (cb) -> cb()
+    test: -> true
+    testNot: -> false
+    getNum: -> 2
+    getText: -> "hi"
+    getRange: -> [2..11]
 
 # simple testing of string equality of 
 # expected output vs actual output
@@ -19,8 +31,26 @@ testTransformOutput = (description, input, expectedOutput) ->
 
   """
 
+testEval = (description, input) ->
+  transformed = transform input
+
+  try
+    coffeeEval transformed, coffeeEvalOpts
+  catch e
+    e.message = """
+
+    #{description}
+
+    --- transform output ---
+    #{transformed}
+
+    --- error ---
+    #{e.message}
+    """
+    throw new Error(e.message + '\n' + e.stack )
+
 # start tests
-console.time('all tests passed')
+console.time('output tests passed')
 
 testTransformOutput 'self closing tag',
 """<Person />""",
@@ -81,15 +111,15 @@ Person({"name": (
     'yes'
   else
     'no'
-)}, \\
+)}, 
 (
 
   for n in a
     React.DOM.div(null, \"\"\" a
       asf
-\"\"\", React.DOM.li({"xy": ("as")}, ( n+1 ), React.DOM.a(null), \" \", React.DOM.a(null), \" \")\\
+\"\"\", React.DOM.li({"xy": ("as")}, ( n+1 ), React.DOM.a(null), \" \", React.DOM.a(null), \" \")
     )
-)\\
+)
 
 )
 """
@@ -122,7 +152,7 @@ HelloWorld = React.createClass({
     return (
       React.DOM.p(null, \"\"\"
         Hello, \"\"\", React.DOM.input({"type": "text", "placeholder": "Your name here"}), \"\"\"!
-        It is \"\"\", (this.props.date.toTimeString())\\
+        It is \"\"\", (this.props.date.toTimeString())
       )
     );
 });
@@ -153,8 +183,8 @@ setInterval(() ->
 
 React.createClass
   render: ->
-    return Nav({"color": "blue"}, \\
-      (Profile(null, \"click\", (Math.random(),Selfclosing({"coolattr": true}))) for i in [start...finish])\\
+    return Nav({"color": "blue"}, 
+      (Profile(null, \"click\", (Math.random(),Selfclosing({"coolattr": true}))) for i in [start...finish])
     )
 """
 
@@ -166,8 +196,24 @@ active={ if isActive() then 'active' else 'inactive' } data-attr='works' checked
 """,
 """
 Person({"eyes": 2, "friends": (getFriends()), "popular": "yes",  \\
-"active": ( if isActive() then 'active' else 'inactive' ), "data-attr": 'works', "checked": true, "check": me_out \\
+"active": ( if isActive() then 'active' else 'inactive' ), "data-attr": 'works', "checked": true, "check": me_out
 })
+"""
+
+testTransformOutput 'pragma with alternate dom implementation',
+"""
+# @cjsx awesome.fun
+<div> a
+  asf
+  <li xy={"as"}>{ n+1 }<a /> <a /> </li>
+</div>
+""",
+"""
+
+awesome.fun.div(null, \"\"\" a
+  asf
+\"\"\", awesome.fun.li({"xy": ("as")}, ( n+1 ), awesome.fun.a(null), \" \", awesome.fun.a(null), \" \")
+)
 """
 
 testTransformOutput 'comment',
@@ -230,4 +276,61 @@ testTransformOutput 'string cannot be written within cjsx',
 """Person(null, \" "i am not a string" 'nor am i' \")"""
 
 # end tests
-console.timeEnd('all tests passed')
+console.timeEnd('output tests passed')
+
+
+console.time('eval tests passed')
+testEval 'complex whitespace',
+"""
+<article name={
+  if test()
+    'yes'
+  else
+    'no'
+}>
+{
+
+  for n in getRange()
+    <div> a
+      some cool text
+      <li class={"as"+1}>{ n+1 }<a /> <a /> </li>
+    </div>
+}
+
+</article>
+"""
+
+testEval 'more complex output',
+"""
+call(() ->
+  React.renderComponent(
+    <span date="{new Date()}" />,
+    sink('example')
+  )
+, 500)
+
+React.createClass({
+  render: ->
+    return <div color="blue">
+      {<li>click{  <img coolattr /> } </li> for i in getRange()} 
+    </div>
+})
+"""
+
+testEval 'multiline elements',
+"""
+  <div>
+  <div>
+  <div>
+  <div>
+    <article name={ new Date() } number = 203
+     range={getRange()}
+    >
+    </article>
+  </div>
+  </div>
+  </div>
+  </div>
+"""
+console.timeEnd('eval tests passed')
+
