@@ -1,0 +1,434 @@
+this file contains testcases
+anything within the blocks delimited by double-hash tags 
+##like_this 
+will be parsed into an object to be used as a testcase
+for example:
+##my_cool_block
+this text will be extracted verbatim. useful for testing code which 
+processes text, when the exact characters of the input and output matter
+##end
+however, only configured tags will be matched. everything else will be discarded
+(including everything in this file so far)
+
+
+##desc
+self closing tag
+##input
+<Person />
+##expected
+Person(null)
+##end
+
+##desc
+ambigious tag-like expression
+##input
+x = a <b > c
+##expected
+x = a <b > c
+##end
+
+##desc
+ambigious tag
+##input
+x = a <b > c </b>
+##expected
+x = a React.DOM.b(null, " c ")
+##end
+
+##desc
+escaped coffeescript attribute
+##input
+<Person name={ if test() then 'yes' else 'no'} />
+##expected
+Person({"name": ( if test() then 'yes' else 'no')})
+##end
+
+##desc
+escaped coffeescript attribute over multiple lines
+##input
+<Person name={
+  if test() 
+    'yes'
+  else
+    'no'
+} />
+##expected
+Person({"name": (
+  if test() 
+    'yes'
+  else
+    'no'
+)})
+##end
+
+##desc
+multiple line escaped coffeescript with nested cjsx
+##input
+<Person name={
+  if test()
+    'yes'
+  else
+    'no'
+}>
+{
+
+  for n in a
+    <div> a
+      asf
+      <li xy={"as"}>{ n+1 }<a /> <a /> </li>
+    </div>
+}
+
+</Person>
+##expected
+Person({"name": (
+  if test()
+    'yes'
+  else
+    'no'
+)}, 
+(
+
+  for n in a
+    React.DOM.div(null, """ a
+      asf
+""", React.DOM.li({"xy": ("as")}, ( n+1 ), React.DOM.a(null), " ", React.DOM.a(null), " ")
+    )
+)
+
+)
+##end
+
+
+##desc
+nested cjsx within an attribute
+##input
+<Company>
+<Person name={<NameComponent />} />
+</Company>
+##expected
+Company(null, 
+Person({"name": (NameComponent(null))})
+)
+##end
+
+
+##disabled
+multiline tag with nested cjsx within an attribute (currently failing)
+##input
+<Person 
+  name={
+    name = formatName(user.name)
+    <NameComponent name={name.toUppercase()} />
+  } 
+>
+  blah blah blah
+</Person>
+##expected
+Person({"name": (NameComponent(null))})
+##end
+
+##desc
+multiline tag attributes with escaped coffeescript
+##input
+<Person name={if isActive() then 'active' else 'inactive'}
+someattr='on new line' />
+##expected
+Person({"name": (if isActive() then 'active' else 'inactive'),  \
+"someattr": 'on new line'})
+##end
+
+##desc
+example react class with cjsx, text and escaped coffeescript
+##input
+HelloWorld = React.createClass({
+  render: () ->
+    return (
+      <p>
+        Hello, <input type="text" placeholder="Your name here" />!
+        It is {this.props.date.toTimeString()}
+      </p>
+    );
+});
+##expected
+HelloWorld = React.createClass({
+  render: () ->
+    return (
+      React.DOM.p(null, """
+        Hello, """, React.DOM.input({"type": "text", "placeholder": "Your name here"}), """!
+        It is """, (this.props.date.toTimeString())
+      )
+    );
+});
+##end
+
+##desc
+more complex output
+##input
+setInterval(() ->
+  React.renderComponent(
+    <HelloWorld date="{new Date()}" />,
+    document.getElementById('example')
+  );
+, 500);
+
+React.createClass
+  render: ->
+    return <Nav color="blue">
+      {<Profile>click{Math.random(),<Selfclosing coolattr />}</Profile> for i in [start...finish]}
+    </Nav>
+##expected
+setInterval(() ->
+  React.renderComponent(
+    HelloWorld({"date": "{new Date()}"}),
+    document.getElementById('example')
+  );
+, 500);
+
+React.createClass
+  render: ->
+    return Nav({"color": "blue"}, 
+      (Profile(null, "click", (Math.random(),Selfclosing({"coolattr": true}))) for i in [start...finish])
+    )
+##end
+
+##desc
+lots of attributes
+##input
+
+<Person eyes=2 friends={getFriends()} popular = "yes"
+active={ if isActive() then 'active' else 'inactive' } data-attr='works' checked check=me_out
+/>
+##expected
+
+Person({"eyes": 2, "friends": (getFriends()), "popular": "yes",  \
+"active": ( if isActive() then 'active' else 'inactive' ), "data-attr": 'works', "checked": true, "check": me_out
+})
+##end
+
+
+##desc
+multiline elements
+##input
+  <div something={
+    do ->
+      test = /432/gm # this is a regex
+      6 /432/gm # this is division
+  }
+  >
+  <div>
+  <div>
+  <div>
+    <article name={ new Date() } number = 203
+     range={getRange()}
+    >
+    </article>
+  </div>
+  </div>
+  </div>
+  </div>
+##expected
+  React.DOM.div({"something": (
+    do ->
+      test = /432/gm # this is a regex
+      6 /432/gm # this is division
+  )
+  }, 
+  React.DOM.div(null, 
+  React.DOM.div(null, 
+  React.DOM.div(null, 
+    React.DOM.article({"name": ( new Date() ), "number": 203,  \
+     "range": (getRange())
+    }
+    )
+  )
+  )
+  )
+  )
+##end
+
+
+
+##desc
+pragma with alternate dom implementation
+##input
+# @cjsx awesome.fun
+<div> a
+  asf
+  <li xy={"as"}>{ n+1 }<a /> <a /> </li>
+</div>
+##expected
+
+awesome.fun.div(null, """ a
+  asf
+""", awesome.fun.li({"xy": ("as")}, ( n+1 ), awesome.fun.a(null), " ", awesome.fun.a(null), " ")
+)
+##end
+
+##desc
+pragma is case insensitive
+##input
+# @cJSX cool
+<div> a </div>
+##expected
+
+cool.div(null, " a ")
+##end
+
+##desc
+comment
+##input
+# <Person />
+##expected
+# <Person />
+##end
+
+##desc
+herecomment
+##input
+###
+<Person />
+###
+##expected
+###
+<Person />
+###
+##end
+
+##desc
+regex
+##input
+/<Person \/>/
+##expected
+/<Person \/>/
+##end
+
+##desc
+complex regex
+##input
+<Person />
+/\/\/<Person \/>\>\//
+##expected
+Person(null)
+/\/\/<Person \/>\>\//
+##end
+
+
+##desc
+heregex
+##input
+test = /432/gm # this is a regex
+6 /432/gm # this is division
+<tag>
+{test = /<tag>/} <--this is a regex containing something which looks like a tag 
+</tag>
+<Person />
+REGEX = /// ^
+  (/ (?! [\s=] )   # comment comment <comment>comment</comment>
+  [^ [ / \n \\ ]*  # comment comment
+  (?:
+    <tag />
+    (?: \\[\s\S]   # comment comment
+      | \[         # comment comment
+           [^ \] \n \\ ]*
+           (?: \\[\s\S] [^ \] \n \\ ]* )*
+           <tag>tag</tag>
+         ]
+    ) [^ [ / \n \\ ]*
+  )*
+  /) ([imgy]{0,4}) (?!\w)
+///
+<Person />
+##expected
+test = /432/gm # this is a regex
+6 /432/gm # this is division
+tag(null, 
+(test = /<tag>/), """ <--this is a regex containing something which looks like a tag 
+""")
+Person(null)
+REGEX = /// ^
+  (/ (?! [\s=] )   # comment comment <comment>comment</comment>
+  [^ [ / \n \\ ]*  # comment comment
+  (?:
+    <tag />
+    (?: \\[\s\S]   # comment comment
+      | \[         # comment comment
+           [^ \] \n \\ ]*
+           (?: \\[\s\S] [^ \] \n \\ ]* )*
+           <tag>tag</tag>
+         ]
+    ) [^ [ / \n \\ ]*
+  )*
+  /) ([imgy]{0,4}) (?!\w)
+///
+Person(null)
+##end
+
+##desc
+js escaped
+##input
+`<Person />`
+##expected
+`<Person />`
+##end
+
+##desc
+string single quote
+##input
+'<Person />'
+##expected
+'<Person />'
+##end
+
+##desc
+string double quote
+##input
+"<Person />"
+##expected
+"<Person />"
+##end
+
+##desc
+string triple single quote
+##input
+'''<Person />'''
+##expected
+'''<Person />'''
+##end
+
+##desc
+string triple double quote
+##input
+"""<Person />"""
+##expected
+"""<Person />"""
+##end
+
+##desc
+escaped js cannot be written within cjsx
+##input
+<Person> `i am not js` </Person>
+##expected
+Person(null, " `i am not js` ")
+##end
+
+##desc
+comment cannot be written within cjsx
+##input
+<Person>
+# i am not a comment
+</Person>
+##expected
+Person(null, """
+# i am not a comment
+""")
+##end
+
+##desc
+string cannot be written within cjsx
+##input
+<Person> "i am not a string" 'nor am i' </Person>
+##expected
+Person(null, " "i am not a string" 'nor am i' ")
+##end
+

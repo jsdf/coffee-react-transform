@@ -10,8 +10,8 @@ parseTreeLeafNode = (type, value = null) -> {type, value}
 parseTreeBranchNode = (type, value = null, children = []) -> {type, value, children}
 
 module.exports = class Parser
-  parse: (code, opts = {}) ->
-    @parseTree = parseTreeBranchNode $.ROOT # concrete syntax tree (initialised with root node)
+  parse: (code, @opts = {}) ->
+    @parseTree = parseTreeBranchNode @opts.root or $.ROOT # concrete syntax tree (initialised with root node)
     @activeStates = [@parseTree] # stack tracking current parse tree position (starting with root)
     @chunkLine = 0 # The start line for the current @chunk.
     @chunkColumn =  0 # The start column of the current @chunk.
@@ -19,14 +19,15 @@ module.exports = class Parser
     code = @clean code # The stripped, cleaned original source code.
 
     i = 0
-    while @chunk = code[i..]
+    while (@chunk = code[i..])
+      break if @activeStates.length is 0
       consumed = (
           if @activeBranchNode().type isnt $.CJSX_EL
             @csComment() or
             @csHeredoc() or
             @csString() or
             @csRegex() or
-            @jsEscaped() # TODO: support regex and heregex
+            @jsEscaped()
         ) or
         @cjsxStart() or
         @cjsxEscape() or
@@ -40,10 +41,17 @@ module.exports = class Parser
 
       i += consumed
     
-    unless @activeBranchNode() is @parseTree
-      throwSyntaxError \
-        "Unexpected EOF: unclosed #{@activeBranchNode().type}",
-        first_line: @chunkLine, first_column: @chunkColumn
+    if @activeBranchNode()? and @activeBranchNode() isnt @parseTree
+      message = "Unexpected end of input: unclosed #{@activeBranchNode().type}"
+      throwSyntaxError message, first_line: @chunkLine, first_column: @chunkColumn
+
+    @remainder = code[i..]
+
+    unless @opts.recursive
+      if @remainder.length
+        throwSyntaxError \
+          "Unexpected return from root state",
+          first_line: @chunkLine, first_column: @chunkColumn
 
     @parseTree # return completed parseTree
 
@@ -131,7 +139,7 @@ module.exports = class Parser
     return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
     @pushActiveBranchNode parseTreeBranchNode $.CJSX_EL, tagName
-    @addLeafNodeToActiveBranch @cjsxAttributes attributesText
+    @addLeafNodeToActiveBranch @cjsxAttributesParse attributesText
 
     if selfClosing
       @popActiveBranchNode() # close cjsx tag
@@ -202,12 +210,38 @@ module.exports = class Parser
   addLeafNodeToActiveBranch: (node) ->
     @activeBranchNode().children.push(node)
 
-  cjsxAttributes: (attributesText) ->
+  cjsxEscAttrNodeRecursiveParse: (attrName, cjsxEscInput) ->
+    parser = new Parser()
+
+    # parse input fragment starting in 'CJSX_ESC' state 
+    cjsxEscParseSubtree = parser.parse(cjsxEscInput, {
+      root: $.CJSX_ESC
+      recursive: true  
+    })
+
+    if parser.remainder.length
+      # i know this seems pretty weird but just go with it
+      remainderAttrTree = @cjsxAttributesParse(parser.remainder+'}')
+      remainderAttrs = remainderAttrTree.children
+
+    [
+      parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+        parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+        cjsxEscParseSubtree
+      ])
+    ].concat (remainderAttrs or [])
+
+  # this is probably the worst, most unfortunate part of this codebase
+  # attributes should really be parsed as part of the main parse loop
+  cjsxAttributesParse: (attributesText) ->
+    self = @
     parseTreeBranchNode $.CJSX_ATTRIBUTES, null, do ->
-      while attrMatches = TAG_ATTRIBUTES.exec attributesText
+      attrNodes = []
+      tagAttrMatcher = tagAttrRegex()
+      while attrMatches = tagAttrMatcher.exec attributesText
         [ attrNameValText, attrName, doubleQuotedVal,
-          singleQuotedVal, csEscVal, bareVal, whitespace ] = attrMatches
-        if attrName
+          singleQuotedVal, cjsxEscVal, bareVal, whitespace ] = attrMatches
+        nextAttrNodes = if attrName
           if doubleQuotedVal # "value"
             parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
               parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
@@ -218,11 +252,8 @@ module.exports = class Parser
               parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
               parseTreeLeafNode($.CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
             ])
-          else if csEscVal # {value}
-            parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-              parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-              parseTreeBranchNode($.CJSX_ESC, null, [parseTreeLeafNode($.CS, csEscVal)])
-            ])
+          else if cjsxEscVal # {value}
+            self.cjsxEscAttrNodeRecursiveParse(attrName, cjsxEscVal)
           else if bareVal # value
             parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
               parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
@@ -239,6 +270,8 @@ module.exports = class Parser
           throwSyntaxError \
             "Invalid attribute #{attrNameValText} in #{attributesText}",
             first_line: @chunkLine, first_column: @chunkColumn
+        attrNodes = attrNodes.concat nextAttrNodes
+      attrNodes
 
   # helpers (from cs lexer)
   
@@ -246,10 +279,10 @@ module.exports = class Parser
   # returns, etc.
   clean: (code) ->
     code = code.slice(1) if code.charCodeAt(0) is BOM
-    code = code.replace(/\r/g, '').replace TRAILING_SPACES, ''
-    if WHITESPACE.test code
-      code = "\n#{code}"
-      @chunkLine--
+    # code = code.replace(/\r/g, '').replace TRAILING_SPACES, ''
+    # if WHITESPACE.test code
+    #   code = "\n#{code}"
+    #   @chunkLine--
     code
 
   # Returns the line and column number from an offset into the current chunk.
@@ -312,21 +345,21 @@ module.exports = class Parser
 
 # [1] tag name
 # [2] attributes text
-# [3] 
-# [4] self closing?
-OPENING_TAG = /^<([-A-Za-z0-9_]+)([^<>]*?)(\/?)>/
+# [3] self closing?
+OPENING_TAG = /^<([-A-Za-z0-9_]+)((?:\s+[\w-]+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|(?:{[\s\S]*?})|[^>\s]+))?)*?\s*)(\/?)>/
 
 # [1] tag name
 CLOSING_TAG = /^<\/([-A-Za-z0-9_]+)[^>]*>/
 
-# [0] attr=val
-# [1] attr
-# [2] "val" double quoted
-# [3] 'val' single quoted
-# [4] {val} {cs escaped}
-# [5] val bare
-# [6] whitespace
-TAG_ATTRIBUTES = /(?:([-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|(?:{((?:\\.|[^}])*)})|([^>\s]+)))?)|([\s\n]+)/g
+tagAttrRegex = ->
+  # [0] attr=val
+  # [1] attr
+  # [2] "val" double quoted
+  # [3] 'val' single quoted
+  # [4] {val} {cs escaped}
+  # [5] val bare
+  # [6] whitespace
+  TAG_ATTRIBUTES = /(?:([-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|(?:{((?:\\.|[\s\S])*)})|([^>\s]+)))?)|([\s\n]+)/g
 
 PRAGMA = /^\s*#\s*@cjsx\s+(\S*)/i
 
@@ -364,3 +397,4 @@ REGEX = /// ^
 ///
 
 HEREGEX      = /// ^ /{3} ((?:\\?[\s\S])+?) /{3} ([imgy]{0,4}) (?!\w) ///
+

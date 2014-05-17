@@ -1,0 +1,59 @@
+see 'output-testcases.txt' for a description of this file format
+
+
+##desc
+complex whitespace
+##input
+<article name={
+  if test()
+    'yes'
+  else
+    'no'
+}>
+{
+
+  for n in getRange()
+    <div> a
+      some cool text
+      <li class={"as"+1}>{ n+1 }<a /> <a /> </li>
+    </div>
+}
+
+</article>
+##end
+
+##desc
+more complex output
+##input
+call(() ->
+  React.renderComponent(
+    <span date="{new Date()}" />,
+    sink('example')
+  )
+, 500)
+
+React.createClass({
+  render: ->
+    return <div color="blue">
+      {<li>click{  <img coolattr /> } </li> for i in getRange()} 
+    </div>
+})
+##end
+
+##desc
+multiline elements
+##input
+  <div>
+  <div>
+  <div>
+  <div>
+    <article name={ new Date() } number = 203
+     range={getRange()}
+    >
+    </article>
+  </div>
+  </div>
+  </div>
+  </div>
+##end
+
