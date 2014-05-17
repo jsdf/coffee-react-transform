@@ -7,16 +7,14 @@ Provides support for an equivalent of JSX syntax in Coffeescript (called CJSX) s
 car-component.coffee
 
 ```html
-# @cjsx React.DOM 
+# @cjsx React.DOM
 Car = React.createClass
   render: ->
-    <Vehicle doors=4 stars={getSafetyRating()*5}  data-top-down="yep" checked>
+    <Vehicle doors=4 locked={isLocked()}  data-colour="red" on>
       <FrontSeat />
       <BackSeat />
       <p>Which seat can I take? {@props.seat}</p>
     </Vehicle>
-
-React.renderComponent(<Car seat="front, obvs" />, document.getElementById('container'))
 ```
 
 transform
@@ -28,12 +26,14 @@ cjsx-transform car-component.coffee
 output
 
 ```coffeescript
-# @cjsx React.DOM 
+
 Car = React.createClass
   render: ->
-    Vehicle({"doors": "4", "stars": (getSafetyRating()*5), "data-top-down": "yep", "checked": true}, FrontSeat(null), BackSeat(null), React.DOM.p(null, """Which seat can I take?""", (@props.seat)))
-
-React.renderComponent(Car({"seat": "front, obvs"}), document.getElementById('container'))
+    Vehicle({"doors": 4, "locked": (isLocked()), "data-colour": "red", "on": true},
+      FrontSeat(null),
+      BackSeat(null),
+      React.DOM.p(null, "Which seat can I take? ", (@props.seat))
+    )
 ```
 
 ### Note about the .cjsx file extension
@@ -67,5 +67,18 @@ transformed = transform('...some cjsx code...')
 
 
 ### Known issues/caveats
-- At this stage regex literals are not properly 'escaped' so any html tags inside a regex literal will be transformed as well. This will be fixed.
+ Tags nested within other tags' attributes may not be rewritten properly, eg.
+```html
+  <Component1>
+  	<Component2 attr2={<Component3 attr3={ 1 + 1 } />} />
+  </Component1>
+	```
+  Instead you should write:
+  ```html
+  component3 = <Component3 attr3={ 1 + 1 } />
 
+  <Component1>
+    <Component2 attr2={component3} />
+  </Component1>
+  ```
+  which is probably more readable anyway.
