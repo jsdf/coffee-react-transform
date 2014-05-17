@@ -69,16 +69,16 @@ transformed = transform('...some cjsx code...')
 ### Known issues/caveats
  Tags nested within other tags' attributes may not be rewritten properly, eg.
 ```html
-  <Component1>
-  	<Component2 attr2={<Component3 attr3={ 1 + 1 } />} />
-  </Component1>
-	```
-  Instead you should write:
-  ```html
-  component3 = <Component3 attr3={ 1 + 1 } />
+<Component1>
+  <Component2 attr2={<Component3 attr3={ 1 + 1 } />} />
+</Component1>
+```
+Instead you should write:
+```html
+component3 = <Component3 attr3={ 1 + 1 } />
 
-  <Component1>
-    <Component2 attr2={component3} />
-  </Component1>
-  ```
-  which is probably more readable anyway.
+<Component1>
+  <Component2 attr2={component3} />
+</Component1>
+```
+which is probably more readable anyway.
