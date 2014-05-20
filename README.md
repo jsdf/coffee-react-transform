@@ -36,8 +36,12 @@ Car = React.createClass
     )
 ```
 
-### Note about the .cjsx file extension
-The custom file extension recently changed from `.csx` to `.cjsx` to avoid conflicting with an existing C# related file extension, so be sure to update your files accordingly (including changing the pragma to  `@cjsx`). You can also just use `.coffee` as the file extension. Backwards compatibility will be maintained until the next major version.
+### Getting Started
+`coffee-react-transform` simply handles preprocessing your coffeescript with JSX-style markup. Instead of using it directly, you may want to make use of one of these more high-level tools:   
+- For a drop in replacement for the `coffee` executable check out [coffee-react](https://github.com/jsdf/coffee-react).  
+- If you want to be able to `require()` cjsx files on the server use  [node-cjsx](https://github.com/SimonDegraeve/node-cjsx) or [coffee-react](https://github.com/jsdf/coffee-react).  
+- If you want to use cjsx via a browserify transform, take a look at  [coffee-reactify](https://github.com/jsdf/coffee-reactify) or [cjsxify](https://github.com/SimonDegraeve/cjsxify).  
+- For an equivalent to [react-quickstart](https://github.com/andreypopp/react-quickstart) see [react-coffee-quickstart](https://github.com/SimonDegraeve/react-coffee-quickstart).  
 
 ### Installation
 ```bash
@@ -65,7 +69,6 @@ transformed = transform('...some cjsx code...')
 
 `cake test` or `cake watch:test`
 
-
 ### Known issues/caveats
  Tags nested within other tags' attributes may not be rewritten properly, eg.
 ```html
@@ -82,3 +85,8 @@ component3 = <Component3 attr3={ 1 + 1 } />
 </Component1>
 ```
 which is probably more readable anyway.
+
+
+#### Note about the .cjsx file extension
+The custom file extension recently changed from `.csx` to `.cjsx` to avoid conflicting with an existing C# related file extension, so be sure to update your files accordingly (including changing the pragma to  `@cjsx`). You can also just use `.coffee` as the file extension. Backwards compatibility will be maintained until the next major version.
+
