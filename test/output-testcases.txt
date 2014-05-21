@@ -11,14 +11,6 @@ however, only configured tags will be matched. everything else will be discarded
 (including everything in this file so far)
 
 ##desc
-tag with {{}}
-##input
-<Person name={{item: value}} />
-##expected
-Person({"name": ({item: value})})
-##end
-
-##desc
 self closing tag
 ##input
 <Person />
@@ -439,3 +431,10 @@ string cannot be written within cjsx
 Person(null, " "i am not a string" 'nor am i' ")
 ##end
 
+##desc
+tag with {{}}
+##input
+<Person name={{value: item, key, item}} />
+##expected
+Person({"name": ({value: item, key, item})})
+##end

@@ -40,7 +40,7 @@ module.exports = class Parser
       [@chunkLine, @chunkColumn] = @getLineAndColumnFromChunk consumed
 
       i += consumed
-    
+
     if @activeBranchNode()? and @activeBranchNode() isnt @parseTree
       message = "Unexpected end of input: unclosed #{@activeBranchNode().type}"
       throwSyntaxError message, first_line: @chunkLine, first_column: @chunkColumn
@@ -153,8 +153,9 @@ module.exports = class Parser
     return 1
 
   cjsxUnescape: ->
+    return 0 if @opts.contained
     return 0 unless @activeBranchNode().type is $.CJSX_ESC and @chunk.charAt(0) is '}'
-    
+
     @popActiveBranchNode() # close cjsx escape
     return 1
 
@@ -216,7 +217,8 @@ module.exports = class Parser
     # parse input fragment starting in 'CJSX_ESC' state 
     cjsxEscParseSubtree = parser.parse(cjsxEscInput, {
       root: $.CJSX_ESC
-      recursive: true  
+      recursive: true
+      contained: cjsxEscInput.indexOf('{') is 0 and cjsxEscInput.indexOf('}') > -1
     })
 
     if parser.remainder.length
