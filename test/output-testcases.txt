@@ -10,6 +10,13 @@ processes text, when the exact characters of the input and output matter
 however, only configured tags will be matched. everything else will be discarded
 (including everything in this file so far)
 
+##desc
+tag with {{}}
+##input
+<Person name={{item: value}} />
+##expected
+Person({"name": ({item: value})})
+##end
 
 ##desc
 self closing tag
