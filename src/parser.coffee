@@ -22,7 +22,7 @@ module.exports = class Parser
     while (@chunk = code[i..])
       break if @activeStates.length is 0
       consumed = (
-          if @activeBranchNode().type isnt $.CJSX_EL
+          if @currentState() isnt $.CJSX_EL and @currentState() isnt $.CJSX_ATTRIBUTES
             @csComment() or
             @csHeredoc() or
             @csString() or
@@ -42,7 +42,7 @@ module.exports = class Parser
       i += consumed
 
     if @activeBranchNode()? and @activeBranchNode() isnt @parseTree
-      message = "Unexpected end of input: unclosed #{@activeBranchNode().type}"
+      message = "Unexpected end of input: unclosed #{@currentState()}"
       throwSyntaxError message, first_line: @chunkLine, first_column: @chunkColumn
 
     @remainder = code[i..]
@@ -103,8 +103,9 @@ module.exports = class Parser
 
     # clever js regex heuristics should go here...
     # except as we haven't actually parsed most of the code,
-    # we can't look at tokens to figure out if this is actually division
-    # maybe search backward and do a hacky sort of mini parse?
+    # we can't look at tokens to figure out if this is actually division.
+    # maybe this will be doable if we parse the code sections for
+    # symbols and whitespace at least
 
     return 0 unless match = REGEX.exec @chunk
     [match, regex, flags] = match
@@ -139,28 +140,52 @@ module.exports = class Parser
     return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
     @pushActiveBranchNode parseTreeBranchNode $.CJSX_EL, tagName
+    # @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTRIBUTES
     @addLeafNodeToActiveBranch @cjsxAttributesParse attributesText
 
     if selfClosing
       @popActiveBranchNode() # close cjsx tag
 
+    # 1+tagName.length
     input.length
 
+  cjsxAttribute: ->
+    return 0 unless @currentState() is $.CJSX_ATTRIBUTES
+
+    if @chunk.charAt(0) is '/'
+      if @chunk.charAt(1) is '>'
+        @popActiveBranchNode() # end attributes
+        @popActiveBranchNode() # end cjsx
+        return 2
+      else
+        throwSyntaxError \
+          "/ without immediately following > in CJSX tag #{@peekActiveState(2).value}",
+          first_line: @chunkLine, first_column: @chunkColumn
+
+    if @chunk.charAt(0) is '>'
+      @popActiveBranchNode() # end attributes
+      return 1
+
+
+
+  cjsxAttrKey: ->
+    return 0 unless @currentState() is $.CJSX_ATTRIBUTES
+
   cjsxEscape: ->
-    return 0 unless @activeBranchNode().type is $.CJSX_EL and @chunk.charAt(0) is '{'
+    return 0 unless @currentState() is $.CJSX_EL and @chunk.charAt(0) is '{'
 
     @pushActiveBranchNode parseTreeBranchNode $.CJSX_ESC
     return 1
 
   cjsxUnescape: ->
     return 0 if @opts.contained
-    return 0 unless @activeBranchNode().type is $.CJSX_ESC and @chunk.charAt(0) is '}'
+    return 0 unless @currentState() is $.CJSX_ESC and @chunk.charAt(0) is '}'
 
     @popActiveBranchNode() # close cjsx escape
     return 1
 
   cjsxEnd: ->
-    return 0 unless @activeBranchNode().type is $.CJSX_EL
+    return 0 unless @currentState() is $.CJSX_EL
     return 0 unless match = CLOSING_TAG.exec @chunk
     [input, tagName] = match
 
@@ -174,7 +199,7 @@ module.exports = class Parser
     input.length
 
   cjsxText: ->
-    return 0 unless @activeBranchNode().type is $.CJSX_EL
+    return 0 unless @currentState() is $.CJSX_EL
 
     unless @newestNode().type is $.CJSX_TEXT
       @addLeafNodeToActiveBranch parseTreeLeafNode $.CJSX_TEXT, '' # init value as string
@@ -186,7 +211,7 @@ module.exports = class Parser
 
   # fallthrough
   coffeescriptCode: ->
-    # return 0 unless @activeBranchNode().type is $.ROOT or @activeBranchNode().type is $.CJSX_ESC
+    # return 0 unless @currentState() is $.ROOT or @currentState() is $.CJSX_ESC
     
     unless @newestNode().type is $.CS
       @addLeafNodeToActiveBranch parseTreeLeafNode $.CS, '' # init value as string
@@ -199,6 +224,10 @@ module.exports = class Parser
   # parseTree helpers
 
   activeBranchNode: -> last(@activeStates)
+
+  peekActiveState: (depth = 1) -> @activeStates[-depth..][0]
+
+  currentState: -> @activeBranchNode().type
 
   newestNode: -> last(@activeBranchNode().children) or @activeBranchNode()
 
@@ -348,7 +377,25 @@ module.exports = class Parser
 # [1] tag name
 # [2] attributes text
 # [3] self closing?
-OPENING_TAG = /^<([-A-Za-z0-9_]+)((?:\s+[\w-]+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|(?:{[\s\S]*?})|[^>\s]+))?)*?\s*)(\/?)>/
+OPENING_TAG = /// ^
+  <
+    ([-A-Za-z0-9_]+) # tag name (captured)
+    (
+      (?:\s+[\w-]+ # attr name
+        (?:\s*=\s* # equals and whitespace
+          (?:
+              (?:"[^"]*") # double quoted value
+            | (?:'[^']*') # single quoted value
+            | (?:{[\s\S]*?}) # cjsx escaped expression
+            | [^>\s]+ # bare value
+          ) 
+        )?
+      )*?
+      \s* # whitespace after attr pair
+    ) # attributes text (captured)
+    (\/?) # self closing? (captured)
+  >
+///
 
 # [1] tag name
 CLOSING_TAG = /^<\/([-A-Za-z0-9_]+)[^>]*>/
@@ -361,7 +408,21 @@ tagAttrRegex = ->
   # [4] {val} {cs escaped}
   # [5] val bare
   # [6] whitespace
-  TAG_ATTRIBUTES = /(?:([-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|(?:{((?:\\.|[\s\S])*)})|([^>\s]+)))?)|([\s\n]+)/g
+  TAG_ATTRIBUTES = ///
+    (?:
+      ([-A-Za-z0-9_]+) # attr name (captured)
+      (?:
+        \s*=\s* # equals and whitespace
+        (?:
+            (?: " ( (?: \\. | [^"] )* ) " ) # double quoted value (captured)
+          | (?: ' ( (?: \\. | [^'] )* ) ' ) # single quoted value (captured)
+          | (?: { ( (?: \\. | [\s\S] )* ) } ) # cjsx escaped expression (captured)
+          | ( [^>\s]+ ) # bare value (captured)
+        )
+      )?
+    )
+    | ( [\s\n]+ ) # whitespace (captured)
+  ///g
 
 PRAGMA = /^\s*#\s*@cjsx\s+(\S*)/i
 
