@@ -100,14 +100,14 @@ Person({"name": (
 
 
 ##desc
-nested cjsx within an attribute
+nested cjsx within an attribute, with object attr value
 ##input
 <Company>
-<Person name={<NameComponent />} />
+  <Person name={<NameComponent attr3={ {'a': {}, b: '{'} } />} />
 </Company>
 ##expected
 Company(null, 
-Person({"name": (NameComponent(null))})
+  Person({"name": (NameComponent({"attr3": ( {'a': {}, b: '{'} )}))})
 )
 ##end
 
