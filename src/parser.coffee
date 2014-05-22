@@ -101,7 +101,6 @@ module.exports = class Parser
 
     string.length
 
-
   csRegex: ->
     return 0 if @chunk.charAt(0) isnt '/'
     return length if length = @csHeregex()
@@ -186,7 +185,7 @@ module.exports = class Parser
       else if cjsxEscVal # {value}
         @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTR_PAIR
         @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-        # @pushActiveBranchNode parseTreeBranchNode $.CJSX_ESC
+        # on next iteration of parse loop, '{' will trigger CJSX_ESC state
         return input.indexOf('{') # consume up to start of cjsx escape
       else if bareVal # value
         @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
@@ -207,9 +206,6 @@ module.exports = class Parser
       throwSyntaxError \
         "Invalid attribute #{input} in CJSX tag #{@peekActiveState(2).value}",
         first_line: @chunkLine, first_column: @chunkColumn
-
-  cjsxAttrKey: ->
-    return 0 unless @currentState() is $.CJSX_ATTRIBUTES
 
   cjsxEscape: ->
     return 0 unless @chunk.charAt(0) is '{' and @currentState() is $.CJSX_EL or @currentState() is $.CJSX_ATTR_PAIR
