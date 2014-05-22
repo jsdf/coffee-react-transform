@@ -1,9 +1,13 @@
 
+util = require('util')
+
 # Import the helpers we need.
 {count, starts, compact, last, repeat,
 locationDataToString,  throwSyntaxError} = require './helpers'
 
 $ = require './symbols'
+
+inspect = (value) -> util.inspect value, { showHidden: true, depth: null }
 
 # parse tree node builders
 parseTreeLeafNode = (type, value = null) -> {type, value}
@@ -30,6 +34,7 @@ module.exports = class Parser
             @jsEscaped()
         ) or
         @cjsxStart() or
+        @cjsxAttribute() or
         @cjsxEscape() or
         @cjsxUnescape() or
         @cjsxEnd() or
@@ -140,14 +145,9 @@ module.exports = class Parser
     return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
     @pushActiveBranchNode parseTreeBranchNode $.CJSX_EL, tagName
-    # @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTRIBUTES
-    @addLeafNodeToActiveBranch @cjsxAttributesParse attributesText
+    @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTRIBUTES
 
-    if selfClosing
-      @popActiveBranchNode() # close cjsx tag
-
-    # 1+tagName.length
-    input.length
+    1+tagName.length
 
   cjsxAttribute: ->
     return 0 unless @currentState() is $.CJSX_ATTRIBUTES
@@ -166,23 +166,69 @@ module.exports = class Parser
       @popActiveBranchNode() # end attributes
       return 1
 
+    return 0 unless match = TAG_ATTRIBUTES.exec @chunk
+    [ input, attrName, doubleQuotedVal,
+      singleQuotedVal, cjsxEscVal, bareVal, whitespace ] = match
 
+    if attrName
+      if doubleQuotedVal # "value"
+        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          parseTreeLeafNode($.CJSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
+        ])
+        return input.length
+      else if singleQuotedVal # 'value'
+        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          parseTreeLeafNode($.CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
+        ])
+        return input.length
+      else if cjsxEscVal # {value}
+        @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTR_PAIR
+        @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+        # @pushActiveBranchNode parseTreeBranchNode $.CJSX_ESC
+        return input.indexOf('{') # consume up to start of cjsx escape
+      else if bareVal # value
+        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          parseTreeLeafNode($.CJSX_ATTR_VAL, bareVal)
+        ])
+        return input.length
+      else # valueless attr
+        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          parseTreeLeafNode($.CJSX_ATTR_VAL, 'true')
+        ])
+        return input.length
+    else if whitespace
+      @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
+      return input.length
+    else
+      throwSyntaxError \
+        "Invalid attribute #{input} in CJSX tag #{@peekActiveState(2).value}",
+        first_line: @chunkLine, first_column: @chunkColumn
 
   cjsxAttrKey: ->
     return 0 unless @currentState() is $.CJSX_ATTRIBUTES
 
   cjsxEscape: ->
-    return 0 unless @currentState() is $.CJSX_EL and @chunk.charAt(0) is '{'
+    return 0 unless @chunk.charAt(0) is '{' and @currentState() is $.CJSX_EL or @currentState() is $.CJSX_ATTR_PAIR
 
     @pushActiveBranchNode parseTreeBranchNode $.CJSX_ESC
+    @activeBranchNode().stack = 1 # keep track of opening and closing braces
     return 1
 
   cjsxUnescape: ->
     return 0 if @opts.contained
     return 0 unless @currentState() is $.CJSX_ESC and @chunk.charAt(0) is '}'
 
-    @popActiveBranchNode() # close cjsx escape
-    return 1
+    if @activeBranchNode().stack is 0
+      @popActiveBranchNode() # close cjsx escape
+      if @currentState() is $.CJSX_ATTR_PAIR
+        @popActiveBranchNode() # close cjsx escape attr pair
+      return 1
+    else
+      return 0
 
   cjsxEnd: ->
     return 0 unless @currentState() is $.CJSX_EL
@@ -213,6 +259,14 @@ module.exports = class Parser
   coffeescriptCode: ->
     # return 0 unless @currentState() is $.ROOT or @currentState() is $.CJSX_ESC
     
+    if @currentState() is $.CJSX_ESC
+      if @chunk.charAt(0) is '{'
+        @activeBranchNode().stack++
+      else if @chunk.charAt(0) is '}'
+        @activeBranchNode().stack--
+        if @activeBranchNode().stack is 0
+          return 0
+    
     unless @newestNode().type is $.CS
       @addLeafNodeToActiveBranch parseTreeLeafNode $.CS, '' # init value as string
 
@@ -239,70 +293,6 @@ module.exports = class Parser
 
   addLeafNodeToActiveBranch: (node) ->
     @activeBranchNode().children.push(node)
-
-  cjsxEscAttrNodeRecursiveParse: (attrName, cjsxEscInput) ->
-    parser = new Parser()
-
-    # parse input fragment starting in 'CJSX_ESC' state 
-    cjsxEscParseSubtree = parser.parse(cjsxEscInput, {
-      root: $.CJSX_ESC
-      recursive: true
-      contained: cjsxEscInput.indexOf('{') is 0 and cjsxEscInput.indexOf('}') > -1
-    })
-
-    if parser.remainder.length
-      # i know this seems pretty weird but just go with it
-      remainderAttrTree = @cjsxAttributesParse(parser.remainder+'}')
-      remainderAttrs = remainderAttrTree.children
-
-    [
-      parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-        parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-        cjsxEscParseSubtree
-      ])
-    ].concat (remainderAttrs or [])
-
-  # this is probably the worst, most unfortunate part of this codebase
-  # attributes should really be parsed as part of the main parse loop
-  cjsxAttributesParse: (attributesText) ->
-    self = @
-    parseTreeBranchNode $.CJSX_ATTRIBUTES, null, do ->
-      attrNodes = []
-      tagAttrMatcher = tagAttrRegex()
-      while attrMatches = tagAttrMatcher.exec attributesText
-        [ attrNameValText, attrName, doubleQuotedVal,
-          singleQuotedVal, cjsxEscVal, bareVal, whitespace ] = attrMatches
-        nextAttrNodes = if attrName
-          if doubleQuotedVal # "value"
-            parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-              parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-              parseTreeLeafNode($.CJSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
-            ])
-          else if singleQuotedVal # 'value'
-            parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-              parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-              parseTreeLeafNode($.CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
-            ])
-          else if cjsxEscVal # {value}
-            self.cjsxEscAttrNodeRecursiveParse(attrName, cjsxEscVal)
-          else if bareVal # value
-            parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-              parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-              parseTreeLeafNode($.CJSX_ATTR_VAL, bareVal)
-            ])
-          else
-            parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-              parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-              parseTreeLeafNode($.CJSX_ATTR_VAL, 'true')
-            ])
-        else if whitespace
-          parseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
-        else
-          throwSyntaxError \
-            "Invalid attribute #{attrNameValText} in #{attributesText}",
-            first_line: @chunkLine, first_column: @chunkColumn
-        attrNodes = attrNodes.concat nextAttrNodes
-      attrNodes
 
   # helpers (from cs lexer)
   
@@ -400,29 +390,28 @@ OPENING_TAG = /// ^
 # [1] tag name
 CLOSING_TAG = /^<\/([-A-Za-z0-9_]+)[^>]*>/
 
-tagAttrRegex = ->
-  # [0] attr=val
-  # [1] attr
-  # [2] "val" double quoted
-  # [3] 'val' single quoted
-  # [4] {val} {cs escaped}
-  # [5] val bare
-  # [6] whitespace
-  TAG_ATTRIBUTES = ///
+# [0] attr=val
+# [1] attr
+# [2] "val" double quoted
+# [3] 'val' single quoted
+# [4] {val} {cs escaped}
+# [5] val bare
+# [6] whitespace
+TAG_ATTRIBUTES = ///
+  (?:
+    ([-A-Za-z0-9_]+) # attr name (captured)
     (?:
-      ([-A-Za-z0-9_]+) # attr name (captured)
+      \s*=\s* # equals and whitespace
       (?:
-        \s*=\s* # equals and whitespace
-        (?:
-            (?: " ( (?: \\. | [^"] )* ) " ) # double quoted value (captured)
-          | (?: ' ( (?: \\. | [^'] )* ) ' ) # single quoted value (captured)
-          | (?: { ( (?: \\. | [\s\S] )* ) } ) # cjsx escaped expression (captured)
-          | ( [^>\s]+ ) # bare value (captured)
-        )
-      )?
-    )
-    | ( [\s\n]+ ) # whitespace (captured)
-  ///g
+          (?: " ( (?: \\. | [^"] )* ) " ) # double quoted value (captured)
+        | (?: ' ( (?: \\. | [^'] )* ) ' ) # single quoted value (captured)
+        | (?: { ( (?: \\. | [\s\S] )* ) } ) # cjsx escaped expression (captured)
+        | ( [^>\s]+ ) # bare value (captured)
+      )
+    )?
+  )
+  | ( [\s\n]+ ) # whitespace (captured)
+///
 
 PRAGMA = /^\s*#\s*@cjsx\s+(\S*)/i
 

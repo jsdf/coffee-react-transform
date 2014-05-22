@@ -16,6 +16,19 @@ coffeeEvalOpts =
     getText: -> "hi"
     getRange: -> [2..11]
 
+tryTransform = (input, desc) ->
+  try
+    transformed = transform input
+  catch e
+    e.message = """
+    transform error in testcase: #{desc}
+
+    #{e.message}
+
+    """
+    throw new Error(e.message)
+
+  transformed
 
 run = ->
   runTestcases 'output', "#{__dirname}/output-testcases.txt"
@@ -27,12 +40,15 @@ testTypes =
   'output':
     params: ['desc','input','expected']
     runner: (testcase) ->
-      transformed = transform testcase.input
+      transformed = tryTransform testcase.input, testcase.desc
 
       console.assert transformed == testcase.expected,
       """
 
       #{testcase.desc}
+
+      --- input ---
+      #{testcase.input}
 
       --- Expected output ---
       #{testcase.expected}
@@ -46,7 +62,7 @@ testTypes =
   'eval': 
     params: ['desc','input']
     runner: (testcase) ->
-      transformed = transform testcase.input
+      transformed = tryTransform testcase.input, testcase.desc
 
       try
         coffeeEval transformed, coffeeEvalOpts

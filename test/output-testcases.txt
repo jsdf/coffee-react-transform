@@ -112,8 +112,8 @@ Person({"name": (NameComponent(null))})
 ##end
 
 
-##disabled
-multiline tag with nested cjsx within an attribute (currently failing)
+##desc
+multiline tag with nested cjsx within an attribute
 ##input
 <Person 
   name={
@@ -124,7 +124,30 @@ multiline tag with nested cjsx within an attribute (currently failing)
   blah blah blah
 </Person>
 ##expected
-Person({"name": (NameComponent(null))})
+Person({  \
+  "name": (
+    name = formatName(user.name)
+    NameComponent({"name": (name.toUppercase())})
+  ) 
+}, """
+  blah blah blah
+""")
+##end
+
+##desc
+escaped coffeescript with nested object literals
+##input
+<Person>
+  blah blah blah {
+    {'a' : {}, 'asd': 'asd'}
+  }
+</Person>
+##expected
+Person(null, """
+  blah blah blah """, (
+    {'a' : {}, 'asd': 'asd'}
+  )
+)
 ##end
 
 ##desc

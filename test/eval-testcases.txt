@@ -57,3 +57,16 @@ multiline elements
   </div>
 ##end
 
+##desc
+multiline tag with nested cjsx within an attribute
+##input
+<article 
+  name={
+    date = new Date()
+    <div className="user" dob={date} />
+  } 
+>
+  blah blah blah
+</article>
+##end
+
