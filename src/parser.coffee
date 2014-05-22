@@ -219,7 +219,6 @@ module.exports = class Parser
     return 1
 
   cjsxUnescape: ->
-    return 0 if @opts.contained
     return 0 unless @currentState() is $.CJSX_ESC and @chunk.charAt(0) is '}'
 
     if @activeBranchNode().stack is 0
