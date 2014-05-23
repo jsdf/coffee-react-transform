@@ -29,9 +29,9 @@ output
 
 Car = React.createClass
   render: ->
-    Vehicle({"doors": 4, "locked": (isLocked()), "data-colour": "red", "on": true},
-      FrontSeat(null),
-      BackSeat(null),
+    Vehicle({"doors": 4, "locked": (isLocked()), "data-colour": "red", "on": true}, 
+      FrontSeat(null), 
+      BackSeat(null), 
       React.DOM.p(null, "Which seat can I take? ", (@props.seat))
     )
 ```
@@ -68,23 +68,6 @@ transformed = transform('...some cjsx code...')
 ### Tests
 
 `cake test` or `cake watch:test`
-
-### Known issues/caveats
- Tags nested within other tags' attributes may not be rewritten properly, eg.
-```html
-<Component1>
-  <Component2 attr2={<Component3 attr3={ 1 + 1 } />} />
-</Component1>
-```
-Instead you should write:
-```html
-component3 = <Component3 attr3={ 1 + 1 } />
-
-<Component1>
-  <Component2 attr2={component3} />
-</Component1>
-```
-which is probably more readable anyway.
 
 
 #### Note about the .cjsx file extension
