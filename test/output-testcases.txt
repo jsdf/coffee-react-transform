@@ -35,6 +35,30 @@ x = a React.DOM.b(null, " c ")
 ##end
 
 ##desc
+numeric bare attribute
+##input
+x = <table width=100 />
+##expected
+x = React.DOM.table({"width": 100})
+##end
+
+##desc
+numeric escaped coffeescript attribute
+##input
+x = <table width={100} />
+##expected
+x = React.DOM.table({"width": (100)})
+##end
+
+##desc
+string attribute
+##input
+x = <table width="100" />
+##expected
+x = React.DOM.table({"width": "100"})
+##end
+
+##desc
 escaped coffeescript attribute
 ##input
 <Person name={ if test() then 'yes' else 'no'} />

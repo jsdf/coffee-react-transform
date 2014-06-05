@@ -26,7 +26,7 @@ module.exports = class Parser
     while (@chunk = code[i..])
       break if @activeStates.length is 0
       consumed = (
-          if @currentState() isnt $.CJSX_EL and @currentState() isnt $.CJSX_ATTRIBUTES
+          if @currentState() not in [$.CJSX_EL, $.CJSX_ATTRIBUTES]
             @csComment() or
             @csHeredoc() or
             @csString() or
@@ -208,7 +208,7 @@ module.exports = class Parser
         first_line: @chunkLine, first_column: @chunkColumn
 
   cjsxEscape: ->
-    return 0 unless @chunk.charAt(0) is '{' and @currentState() is $.CJSX_EL or @currentState() is $.CJSX_ATTR_PAIR
+    return 0 unless @chunk.charAt(0) is '{' and @currentState() in [$.CJSX_EL, $.CJSX_ATTR_PAIR]
 
     @pushActiveBranchNode parseTreeBranchNode $.CJSX_ESC
     @activeBranchNode().stack = 1 # keep track of opening and closing braces

@@ -1,4 +1,4 @@
-# Coffeescript React Transformer
+# Coffeescript React JSX Transformer
 
 Provides support for an equivalent of JSX syntax in Coffeescript (called CJSX) so you can write your Facebook React components with the full awesomeness of Coffeescript.
 
@@ -10,10 +10,10 @@ car-component.coffee
 # @cjsx React.DOM
 Car = React.createClass
   render: ->
-    <Vehicle doors=4 locked={isLocked()}  data-colour="red" on>
+    <Vehicle doors={4} locked={isLocked()}  data-colour="red" on>
       <FrontSeat />
       <BackSeat />
-      <p>Which seat can I take? {@props.seat}</p>
+      <p>Which seat can I take? {@props?.seat or 'none'}</p>
     </Vehicle>
 ```
 
@@ -29,18 +29,18 @@ output
 
 Car = React.createClass
   render: ->
-    Vehicle({"doors": 4, "locked": (isLocked()), "data-colour": "red", "on": true}, 
+    Vehicle({"doors": (4), "locked": (isLocked()), "data-colour": "red", "on": true}, 
       FrontSeat(null), 
       BackSeat(null), 
-      React.DOM.p(null, "Which seat can I take? ", (@props.seat))
+      React.DOM.p(null, "Which seat can I take? ", (@props?.seat or 'none'))
     )
 ```
 
 ### Getting Started
-`coffee-react-transform` simply handles preprocessing your coffeescript with JSX-style markup. Instead of using it directly, you may want to make use of one of these more high-level tools:   
+`coffee-react-transform` simply handles preprocessing Coffeescript with JSX-style markup into valid Coffeescript. Instead of using it directly, you may want to make use of one of these more high-level tools:   
 - For a drop in replacement for the `coffee` executable check out [coffee-react](https://github.com/jsdf/coffee-react).  
-- If you want to be able to `require()` cjsx files on the server use  [node-cjsx](https://github.com/SimonDegraeve/node-cjsx) or [coffee-react](https://github.com/jsdf/coffee-react).  
-- If you want to use cjsx via a browserify transform, take a look at  [coffee-reactify](https://github.com/jsdf/coffee-reactify) or [cjsxify](https://github.com/SimonDegraeve/cjsxify).  
+- If you want to be able to `require()` CJSX files on the server use [node-cjsx](https://github.com/SimonDegraeve/node-cjsx) or [coffee-react](https://github.com/jsdf/coffee-react).  
+- If you want to bundle CJSX files via browserify, take a look at [coffee-reactify](https://github.com/jsdf/coffee-reactify) or [cjsxify](https://github.com/SimonDegraeve/cjsxify).  
 - For an equivalent to [react-quickstart](https://github.com/andreypopp/react-quickstart) see [react-coffee-quickstart](https://github.com/SimonDegraeve/react-coffee-quickstart).  
 
 ### Installation
@@ -62,7 +62,7 @@ cjsx-transform examples/car.coffee | coffee -cs > car.js
 ```coffeescript
 transform = require 'coffee-react-transform'
 
-transformed = transform('...some cjsx code...')
+transformed = transform('...some CJSX code...')
 ```
 
 ### Tests

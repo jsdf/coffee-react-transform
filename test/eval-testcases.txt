@@ -70,3 +70,16 @@ multiline tag with nested cjsx within an attribute
 </article>
 ##end
 
+
+##desc
+the car example
+##input
+# @cjsx React.DOM 
+Car = React.createClass
+  render: ->
+    <article doors={4} safety={getRange()}  data-top-down="yep" checked>
+      <div />
+      <div />
+      <p>Which seat can I take? {@props?.seat}</p>
+    </article>
+##end
