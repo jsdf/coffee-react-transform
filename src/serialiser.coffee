@@ -9,6 +9,8 @@ HTML_ELEMENTS = require('./htmlelements')
 
 stringEscape = require './stringescape'
 
+entityDecode = require './entitydecode'
+
 occurrences = require './occurrences'
 
 inspect = (value) -> util.inspect value, { showHidden: true, depth: null }
@@ -155,14 +157,14 @@ serialise.serialisers = serialisers =
         trimmedText = text.substring(leftTrim, rightTrim)
         # escape special chars but then add newlines back in
         # for multiline string number parity
-        escapedText = stringEscape(trimmedText, true)
+        escapedText = stringEscape(entityDecode(trimmedText), true)
         '"""'+escapedText+'"""'
 
     else
       if text == ''
         null # this text node will be omitted
       else
-        '"'+stringEscape(text)+'"'
+        '"'+stringEscape(entityDecode(text))+'"'
 
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser

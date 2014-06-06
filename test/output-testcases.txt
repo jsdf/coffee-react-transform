@@ -487,6 +487,14 @@ Person(null, " a,\x2F\';][\' a\\\'\'@$%^\&\u02da\u00ac\u2211\u02dc\u02da\u2206\u
 ##end
 
 ##desc
+html entities (name, decimal, hex) within cjsx decoded
+##input
+<Person>  &&&&euro;  &#8364; &#x20AC;;; </Person>
+##expected
+Person(null, "  \&\&\&\u20ac  \u20ac \u20ac;; ")
+##end
+
+##desc
 tag with {{}}
 ##input
 <Person name={{value: item, key, item}} />
