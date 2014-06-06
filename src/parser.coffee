@@ -295,7 +295,8 @@ module.exports = class Parser
   # returns, etc.
   clean: (code) ->
     code = code.slice(1) if code.charCodeAt(0) is BOM
-    # code = code.replace(/\r/g, '').replace TRAILING_SPACES, ''
+    code = code.replace(/\r/g, '') # strip carriage return chars
+    # code = code.replace TRAILING_SPACES, ''
     # if WHITESPACE.test code
     #   code = "\n#{code}"
     #   @chunkLine--

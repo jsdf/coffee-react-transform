@@ -23,7 +23,7 @@ tryTransform = (input, desc) ->
     e.message = """
     transform error in testcase: #{desc}
 
-    #{e.message}
+    #{e.stack}
 
     """
     throw new Error(e.message)

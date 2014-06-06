@@ -389,7 +389,7 @@ REGEX = /// ^
 test = /432/gm # this is a regex
 6 /432/gm # this is division
 tag(null, 
-(test = /<tag>/), """ <--this is a regex containing something which looks like a tag 
+(test = /<tag>/), """ \x3C--this is a regex containing something which looks like a tag 
 """)
 Person(null)
 REGEX = /// ^
@@ -451,7 +451,7 @@ string triple double quote
 ##end
 
 ##desc
-escaped js cannot be written within cjsx
+escaped js within cjsx is ignored by parser
 ##input
 <Person> `i am not js` </Person>
 ##expected
@@ -459,7 +459,7 @@ Person(null, " `i am not js` ")
 ##end
 
 ##desc
-comment cannot be written within cjsx
+comment within cjsx is ignored by parser
 ##input
 <Person>
 # i am not a comment
@@ -471,11 +471,19 @@ Person(null, """
 ##end
 
 ##desc
-string cannot be written within cjsx
+string within cjsx is ignored by parser and escaped
 ##input
 <Person> "i am not a string" 'nor am i' </Person>
 ##expected
-Person(null, " "i am not a string" 'nor am i' ")
+Person(null, " \"i am not a string\" \'nor am i\' ")
+##end
+
+##desc
+special chars within cjsx are ignored by parser and escaped
+##input
+<Person> a,/';][' a\''@$%^&˚¬∑˜˚∆å∂¬˚*()*&^%$>><<<< '"''"'''\'\'m' i </Person>
+##expected
+Person(null, " a,\x2F\';][\' a\\\'\'@$%^\&\u02da\u00ac\u2211\u02dc\u02da\u2206\u00e5\u2202\u00ac\u02da*()*\&^%$\x3E\x3E\x3C\x3C\x3C\x3C \'\"\'\'\"\'\'\'\\\'\\\'m\' i ")
 ##end
 
 ##desc

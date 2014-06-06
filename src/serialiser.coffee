@@ -1,6 +1,7 @@
 
+util = require 'util'
+
 {last} = require './helpers'
-{inspect} = require 'util'
 
 $ = require './symbols'
 
@@ -9,6 +10,8 @@ HTML_ELEMENTS = require('./htmlelements')
 stringEscape = require './stringescape'
 
 occurrences = require './occurrences'
+
+inspect = (value) -> util.inspect value, { showHidden: true, depth: null }
 
 module.exports = serialise = (parseTree) ->
   env = {serialiseNode}
@@ -135,6 +138,7 @@ serialise.serialisers = serialisers =
       if WHITESPACE_ONLY.test text
         text
       else
+        # this is not very efficient
         leftSpace = text.match TEXT_LEADING_WHITESPACE
         rightSpace = text.match TEXT_TRAILING_WHITESPACE
 
@@ -149,18 +153,19 @@ serialise.serialisers = serialisers =
           rightTrim = text.length
 
         trimmedText = text.substring(leftTrim, rightTrim)
-        '"""'+trimmedText+'"""'
-        # '"""'+text+'"""'
+        # escape special chars but then add newlines back in
+        # for multiline string number parity
+        escapedText = stringEscape(trimmedText, true)
+        '"""'+escapedText+'"""'
 
     else
       if text == ''
         null # this text node will be omitted
       else
-        '"'+text+'"'
+        '"'+stringEscape(text)+'"'
 
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser
-
 
 containsNewlines = (text) -> text.indexOf('\n') > -1
 

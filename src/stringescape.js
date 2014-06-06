@@ -1,58 +1,51 @@
 
-var hex=new Array('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f');
+var hex = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'];
 
-module.exports = function stringEncode(preescape)
-{
-	var escaped="";
-	
-	var i=0;
-	for(i=0;i<preescape.length;i++)
-	{
-		escaped=escaped+encodeCharx(preescape.charAt(i));
-	}
-	
-	return escaped;
+module.exports  =  function stringEncode(input, preserveNewlines) {
+  var escaped = "";
+  
+  for (var i = 0; i < input.length; i++) {
+    escaped = escaped + encodeChar(input.charAt(i), preserveNewlines);
+  }
+  
+  return escaped;
 }
 
-function encodeCharx(original)
-{
-	var found=true;
-	var thecharchar=original.charAt(0);
-	var thechar=original.charCodeAt(0);
-	switch(thecharchar) {
-		case '\n': return "\\n"; break; //newline
-		case '\r': return "\\r"; break; //Carriage return
-		case '\'': return "\\'"; break;
-		case '"': return "\\\""; break;
-		case '\&': return "\\&"; break;
-		case '\\': return "\\\\"; break;
-		case '\t': return "\\t"; break;
-		case '\b': return "\\b"; break;
-		case '\f': return "\\f"; break;
-		case '/': return "\\x2F"; break;
-		case '<': return "\\x3C"; break;
-		case '>': return "\\x3E"; break;
-		default:
-			found=false;
-			break;
-	}
-	if(!found)
-	{
-		if(thechar>127) {
-			var c=thechar;
-			var a4=c%16;
-			c=Math.floor(c/16); 
-			var a3=c%16;
-			c=Math.floor(c/16);
-			var a2=c%16;
-			c=Math.floor(c/16);
-			var a1=c%16;
-		//	alert(a1);
-			return "\\u"+hex[a1]+hex[a2]+hex[a3]+hex[a4]+"";		
-		}
-		else
-		{
-			return original;
-		}
-	}		
+function encodeChar(inputChar, preserveNewlines) {
+  var character = inputChar.charAt(0);
+  var characterCode = inputChar.charCodeAt(0);
+
+  switch(character) {
+    case '\n':
+      if (!preserveNewlines) return "\\n";
+      else return character;
+    case '\r':
+      if (!preserveNewlines) return "\\r";
+      else return character;
+    case '\'': return "\\'";
+    case '"': return "\\\"";
+    case '\&': return "\\&";
+    case '\\': return "\\\\";
+    case '\t': return "\\t";
+    case '\b': return "\\b";
+    case '\f': return "\\f";
+    case '/': return "\\x2F";
+    case '<': return "\\x3C";
+    case '>': return "\\x3E";
+  }
+
+  if (characterCode > 127) {
+    var c = characterCode;
+    var a4 = c % 16;
+    c = Math.floor(c/16); 
+    var a3 = c % 16;
+    c = Math.floor(c/16);
+    var a2 = c % 16;
+    c = Math.floor(c/16);
+    var a1 = c % 16;
+    
+    return "\\u"+hex[a1]+hex[a2]+hex[a3]+hex[a4]+"";    
+  } else {
+    return inputChar;
+  }
 }
