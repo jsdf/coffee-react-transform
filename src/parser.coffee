@@ -1,7 +1,6 @@
 
 # Import the helpers we need.
-{count, starts, compact, last, repeat,
-locationDataToString,  throwSyntaxError} = require './helpers'
+{count, starts, compact, last, repeat, throwSyntaxError} = require './helpers'
 
 $ = require './symbols'
 

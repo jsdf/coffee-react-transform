@@ -9,8 +9,6 @@ stringEscape = require './stringescape'
 
 entityDecode = require './entitydecode'
 
-occurrences = require './occurrences'
-
 module.exports = serialise = (parseTree) ->
   env = {serialiseNode}
   if parseTree.children and
