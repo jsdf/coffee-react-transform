@@ -2,7 +2,7 @@ require('coffee-script').register()
 fs = require 'fs'
 {exec} = require 'child_process'
 coffeeEval = require('coffee-script').eval
-{transform} = require '../src/transformer'
+transform = require '../'
 
 coffeeEvalOpts =
   sandbox:

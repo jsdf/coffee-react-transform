@@ -13,7 +13,7 @@ unless process.env.NODE_DISABLE_COLORS
 
 SOURCEFILES = ['transformer', 'parser', 'serialiser', 'symbols', 'helpers']
 TESTFILES = ['test.coffee','output-testcases.txt','eval-testcases.txt']
-JSFILES = ['htmlelements.js', 'occurrences.js', 'stringescape.js']
+JSFILES = ['htmlelements.js', 'entitydecode.js', 'stringescape.js']
   
 # Log a message with a color.
 log = (message, color, explanation) ->
@@ -52,11 +52,11 @@ test = -> coffee ['test/test.coffee']
 
 task 'build', 'build cjsx transformer from source', build
 
-task 'test', 'run tests', test
+task 'test', 'run tests', -> build test
 
 task 'watch:test', 'watch and run tests', ->
   TESTFILES.forEach (testfile) ->
-    fs.watchFile "test/#{testfile}", interval: 1000, test
+    fs.watchFile "test/#{testfile}", interval: 1000, -> build test
   SOURCEFILES.forEach (sourcefile) ->
-    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, test
+    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, -> build test
   log "watching..." , green
