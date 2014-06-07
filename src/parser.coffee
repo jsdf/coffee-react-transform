@@ -20,7 +20,8 @@ module.exports = class Parser
     i = 0
     while (@chunk = code[i..])
       break if @activeStates.length is 0
-      consumed = (
+      consumed = \
+        (
           if @currentState() not in [$.CJSX_EL, $.CJSX_ATTRIBUTES]
             @csComment() or
             @csHeredoc() or
