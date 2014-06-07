@@ -1,11 +1,12 @@
 
-var hex = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'];
+var hex = '0123456789abcdef'.split('');
 
-module.exports  =  function stringEncode(input, preserveNewlines) {
+module.exports  =  function stringEncode(input, opts) {
+  opts = opts || {};
   var escaped = "";
   
   for (var i = 0; i < input.length; i++) {
-    escaped = escaped + encodeChar(input.charAt(i), preserveNewlines);
+    escaped = escaped + encodeChar(input.charAt(i), opts.preserveNewlines);
   }
   
   return escaped;
@@ -37,14 +38,14 @@ function encodeChar(inputChar, preserveNewlines) {
   if (characterCode > 127) {
     var c = characterCode;
     var a4 = c % 16;
-    c = Math.floor(c/16); 
+    c = ~~(c/16); 
     var a3 = c % 16;
-    c = Math.floor(c/16);
+    c = ~~(c/16);
     var a2 = c % 16;
-    c = Math.floor(c/16);
+    c = ~~(c/16);
     var a1 = c % 16;
     
-    return "\\u"+hex[a1]+hex[a2]+hex[a3]+hex[a4]+"";    
+    return ["\\u", hex[a1], hex[a2], hex[a3], hex[a4]].join('');    
   } else {
     return inputChar;
   }

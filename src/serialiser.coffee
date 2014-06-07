@@ -155,15 +155,18 @@ serialise.serialisers = serialisers =
           rightTrim = text.length
 
         trimmedText = text.substring(leftTrim, rightTrim)
-        # escape special chars but then add newlines back in
-        # for multiline string number parity
-        escapedText = stringEscape(entityDecode(trimmedText), true)
+        # decode html entities to chars
+        # escape string special chars except newlines
+        # output to multiline string literal for line parity
+        escapedText = stringEscape(entityDecode(trimmedText), preserveNewlines:  true)
         '"""'+escapedText+'"""'
 
     else
       if text == ''
         null # this text node will be omitted
       else
+        # decode html entities to chars
+        # escape string special chars
         '"'+stringEscape(entityDecode(text))+'"'
 
   CJSX_ATTR_KEY: genericLeafSerialiser
