@@ -1,13 +1,9 @@
 
-util = require('util')
-
 # Import the helpers we need.
 {count, starts, compact, last, repeat,
 locationDataToString,  throwSyntaxError} = require './helpers'
 
 $ = require './symbols'
-
-inspect = (value) -> util.inspect value, { showHidden: true, depth: null }
 
 # parse tree node builders
 parseTreeLeafNode = (type, value = null) -> {type, value}

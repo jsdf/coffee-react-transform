@@ -1,6 +1,4 @@
 
-util = require 'util'
-
 {last} = require './helpers'
 
 $ = require './symbols'
@@ -12,8 +10,6 @@ stringEscape = require './stringescape'
 entityDecode = require './entitydecode'
 
 occurrences = require './occurrences'
-
-inspect = (value) -> util.inspect value, { showHidden: true, depth: null }
 
 module.exports = serialise = (parseTree) ->
   env = {serialiseNode}
@@ -33,7 +29,7 @@ serialiseNode = (node) ->
   serialised = serialisers[node.type](node, this)
 
   unless typeof serialised is 'string' or serialised is null
-    throw new Error("serialiser #{node.type} didn\'t return a string for node #{inspect(node)}, instead returned #{serialised}")
+    throw new Error("serialiser #{node.type} didn\'t return a string")
 
   serialised
 
