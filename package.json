@@ -36,6 +36,7 @@
     "url": "git://github.com/jsdf/coffee-react-transform.git"
   },
   "devDependencies": {
+    "browserify": "^4.1.8",
     "coffee-script": "^1.7.1"
   }
 }
