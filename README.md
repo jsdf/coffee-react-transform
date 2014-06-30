@@ -11,8 +11,8 @@ car-component.coffee
 Car = React.createClass
   render: ->
     <Vehicle doors={4} locked={isLocked()}  data-colour="red" on>
-      <FrontSeat />
-      <BackSeat />
+      <Parts.FrontSeat />
+      <Parts.BackSeat />
       <p>Which seat can I take? {@props?.seat or 'none'}</p>
     </Vehicle>
 ```
@@ -30,8 +30,8 @@ output
 Car = React.createClass
   render: ->
     Vehicle({"doors": (4), "locked": (isLocked()), "data-colour": "red", "on": true}, 
-      FrontSeat(null), 
-      BackSeat(null), 
+      Parts.FrontSeat(null), 
+      Parts.BackSeat(null), 
       React.DOM.p(null, "Which seat can I take? ", (@props?.seat or 'none'))
     )
 ```
