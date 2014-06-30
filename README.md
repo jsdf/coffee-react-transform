@@ -75,6 +75,20 @@ transformed = transform('...some CJSX code...')
 
 `cake test` or `cake watch:test`
 
+### Load .cjsx files with [Karma](http://karma-runner.github.io/)
+Add a preprocessor clause to the karma conf file, and it will automatically transorm the .cjsx files.
+
+```
+module.exports = function(config) {
+  config.set({
+    preprocessors: {
+      '**/*.cjsx': [ 'cjsx' ]
+    },
+
+    // the rest of the config should be here
+  })
+}
+```
 
 #### Note about the .cjsx file extension
 The custom file extension recently changed from `.csx` to `.cjsx` to avoid conflicting with an existing C# related file extension, so be sure to update your files accordingly (including changing the pragma to  `@cjsx`). You can also just use `.coffee` as the file extension. Backwards compatibility will be maintained until the next major version.
