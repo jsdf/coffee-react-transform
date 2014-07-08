@@ -6,7 +6,7 @@ Provides support for an equivalent of JSX syntax in Coffeescript (called CJSX) s
 
 car-component.coffee
 
-```html
+```coffee
 # @cjsx React.DOM
 Car = React.createClass
   render: ->
@@ -25,7 +25,7 @@ cjsx-transform car-component.coffee
 
 output
 
-```coffeescript
+```coffee
 
 Car = React.createClass
   render: ->
@@ -50,6 +50,7 @@ Car = React.createClass
 - [karma preprocessor](https://github.com/mtscout6/karma-cjsx-preprocessor) for karma test runner
 
 ### Installation
+via npm:
 ```bash
 npm install -g coffee-react-transform
 ```
@@ -65,16 +66,28 @@ cjsx-transform examples/car.coffee | coffee -cs > car.js
 ```
 
 ### API
-```coffeescript
+```coffee
 transform = require 'coffee-react-transform'
 
 transformed = transform('...some CJSX code...')
 ```
 
+#### UMD bundle for the browser
+If you want to use coffee-react-transform in the browser or under ExecJS or some other environment that doesn't support CommonJS modules, you can use this build, which will work as an AMD module or just a plain old script tag.
+[http://wzrd.in/standalone/coffee-react-transform](http://wzrd.in/standalone/coffee-react-transform)
+
+```html
+<script src="http://wzrd.in/standalone/coffee-react-transform"></script>
+<script>console.log(coffeeReactTransform('-> <a />'))</script>
+```
+which should output the CoffeeScript: 
+```coffee
+-> React.DOM.a(null) 
+```
+
 ### Tests
 
 `cake test` or `cake watch:test`
-
 
 #### Note about the .cjsx file extension
 The custom file extension recently changed from `.csx` to `.cjsx` to avoid conflicting with an existing C# related file extension, so be sure to update your files accordingly (including changing the pragma to  `@cjsx`). You can also just use `.coffee` as the file extension. Backwards compatibility will be maintained until the next major version.
