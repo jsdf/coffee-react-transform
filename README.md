@@ -49,12 +49,6 @@ Car = React.createClass
 - [mimosa plugin](https://github.com/mtscout6/mimosa-cjsx) for the mimosa build tool
 - [karma preprocessor](https://github.com/mtscout6/karma-cjsx-preprocessor) for karma test runner
 
-### Installation
-via npm:
-```bash
-npm install -g coffee-react-transform
-```
-
 ### CLI
 
 ```bash
@@ -72,18 +66,22 @@ transform = require 'coffee-react-transform'
 transformed = transform('...some CJSX code...')
 ```
 
+### Installation
+From [npm](https://www.npmjs.org/):
+```bash
+npm install -g coffee-react-transform
+```
+
 #### UMD bundle for the browser
-If you want to use coffee-react-transform in the browser or under ExecJS or some other environment that doesn't support CommonJS modules, you can use this build, which will work as an AMD module or just a plain old script tag.
+If you want to use coffee-react-transform in the browser or under ExecJS or some other environment that doesn't support CommonJS modules, you can use this build provided by [BrowserifyCDN](wzrd.in), which will work as an AMD module or just a plain old script tag:
+
 [http://wzrd.in/standalone/coffee-react-transform](http://wzrd.in/standalone/coffee-react-transform)
 
 ```html
 <script src="http://wzrd.in/standalone/coffee-react-transform"></script>
 <script>console.log(coffeeReactTransform('-> <a />'))</script>
 ```
-which should output the CoffeeScript: 
-```coffee
--> React.DOM.a(null) 
-```
+which should output the CoffeeScript: `-> React.DOM.a(null)`
 
 ### Tests
 
