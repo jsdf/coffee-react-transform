@@ -11,10 +11,10 @@ unless process.env.NODE_DISABLE_COLORS
   reset = '\x1B[0m'
 
 
-SOURCEFILES = ['transformer', 'parser', 'serialiser', 'symbols', 'helpers']
+SOURCEFILES = ['transformer', 'parser', 'serialiser', 'symbols', 'helpers', 'CJSXTransformer']
 TESTFILES = ['test.coffee','output-testcases.txt','eval-testcases.txt']
 JSFILES = ['htmlelements.js', 'entitydecode.js', 'stringescape.js']
-  
+
 # Log a message with a color.
 log = (message, color, explanation) ->
   console.log color + message + reset + ' ' + (explanation or '')
@@ -50,7 +50,13 @@ run = (executable, args = [], cb) ->
 
 test = -> coffee ['test/test.coffee']
 
+browserify = (cb) ->
+  build ->
+    run('./node_modules/.bin/browserify', ['./lib/CJSXTransformer.js', '-o', './build/CJSXTransformer.js'], cb)
+
 task 'build', 'build cjsx transformer from source', build
+
+task 'browserify', 'compile transformer into one file', browserify
 
 task 'test', 'run tests', -> build test
 
