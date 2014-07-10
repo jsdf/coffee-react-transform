@@ -79,9 +79,11 @@ If you want to use coffee-react-transform in the browser or under ExecJS or some
 
 ```html
 <script src="http://wzrd.in/standalone/coffee-react-transform"></script>
-<script>console.log(coffeeReactTransform('-> <a />'))</script>
+<script>
+  coffeeReactTransform('-> <a />');
+  // returns "-> React.DOM.a(null)"
+</script>
 ```
-which should output the CoffeeScript: `-> React.DOM.a(null)`
 
 ### Tests
 
