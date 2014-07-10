@@ -13,7 +13,7 @@ Car = React.createClass
     <Vehicle doors={4} locked={isLocked()}  data-colour="red" on>
       <Parts.FrontSeat />
       <Parts.BackSeat />
-      <p>Which seat can I take? {@props?.seat or 'none'}</p>
+      <p className="kickin">Which seat can I take? {@props?.seat or 'none'}</p>
     </Vehicle>
 ```
 
@@ -32,7 +32,7 @@ Car = React.createClass
     Vehicle({"doors": (4), "locked": (isLocked()), "data-colour": "red", "on": true},
       Parts.FrontSeat(null),
       Parts.BackSeat(null),
-      React.DOM.p(null, "Which seat can I take? ", (@props?.seat or 'none'))
+      React.DOM.p({className: "kickin"}, "Which seat can I take? ", (@props?.seat or 'none'))
     )
 ```
 
