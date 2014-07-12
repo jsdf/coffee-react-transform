@@ -1,0 +1,34 @@
+{
+  "name": "gh-pages-coffee-react",
+  "version": "0.0.0",
+  "description": "",
+  "main": "try-cr.coffee",
+  "dependencies": {
+    "browserify-incremental": "~0.0.1",
+    "code-mirror": "~3.22.0",
+    "coffee-react": "~0.4.0",
+    "react": "~0.10.0",
+    "envify": "~1.2.1",
+    "coffee-reactify": "^0.4.0",
+    "chokidar": "^0.8.2",
+    "glob": "^4.0.4",
+    "less": "^1.7.3",
+    "through": "^2.3.4",
+    "async": "^0.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./build-pages.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jsdf/jsdf.git"
+  },
+  "author": "James Friend <james@jsdf.co> (http://jsdf.co/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jsdf/jsdf/issues"
+  },
+  "homepage": "https://github.com/jsdf/jsdf"
+}
