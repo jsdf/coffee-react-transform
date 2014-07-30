@@ -517,3 +517,13 @@ self closing tag with namespace
 ##expected
 Something.Tag(null)
 ##end
+
+
+##desc
+self closing tag with spread operator
+##input
+<Component a={b} {... x } b="c" />
+##expected
+Component(Object.assign({a:b}, x, {b: "c"}))
+##end
+

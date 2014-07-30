@@ -117,6 +117,9 @@ serialise.serialisers = serialisers =
       .map((child) -> env.serialiseNode child)
       .join(': ')
 
+  CJSX_ATTR_SPREAD: (node, env) ->
+    node.value
+
   # leaf nodes
   CS: genericLeafSerialiser
   CS_COMMENT: genericLeafSerialiser

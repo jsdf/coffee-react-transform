@@ -163,7 +163,9 @@ module.exports = class Parser
 
     return 0 unless match = TAG_ATTRIBUTES.exec @chunk
     [ input, attrName, doubleQuotedVal,
-      singleQuotedVal, cjsxEscVal, bareVal, whitespace ] = match
+      singleQuotedVal, cjsxEscVal, bareVal, 
+      spreadAttr, whitespace ] = match
+    console.log(match)
 
     if attrName
       if doubleQuotedVal # "value"
@@ -195,6 +197,11 @@ module.exports = class Parser
           parseTreeLeafNode($.CJSX_ATTR_VAL, 'true')
         ])
         return input.length
+    else if spreadAttr # {... x, y}
+      console.log('spreadAttr', spreadAttr)
+      for value, index in spreadAttr.split(',')
+        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_SPREAD, value)
+      return input.length
     else if whitespace
       @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
       return input.length
@@ -363,14 +370,20 @@ OPENING_TAG = /// ^
   <
     ([-A-Za-z0-9_\.]+) # tag name (captured)
     (
-      (?:\s+[\w-]+ # attr name
-        (?:\s*=\s* # equals and whitespace
-          (?:
-              (?:"[^"]*") # double quoted value
-            | (?:'[^']*') # single quoted value
-            | (?:{[\s\S]*?}) # cjsx escaped expression
-            | [^>\s]+ # bare value
-          ) 
+      (?:
+        (?:
+            (?:\s+[\w-]+ # attr name
+              (?:\s*=\s* # equals and whitespace
+                (?:
+                    (?:"[^"]*") # double quoted value
+                  | (?:'[^']*') # single quoted value
+                  | (?:{[\s\S]*?}) # cjsx escaped expression
+                  | [^>\s]+ # bare value
+                ) 
+              )
+            )
+          | \s+[\w-]+  # bare attribute 
+          | \s+{...[\s\S]*?}  # spread attribute
         )?
       )*?
       \s* # whitespace after attr pair
@@ -402,6 +415,7 @@ TAG_ATTRIBUTES = ///
       )
     )?
   )
+  | (?: {...( [\s\S]+ ) } ) # spread attributes (captured)
   | ( [\s\n]+ ) # whitespace (captured)
 ///
 

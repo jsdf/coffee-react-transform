@@ -19,6 +19,7 @@ module.exports =
   CJSX_TEXT: 'CJSX_TEXT'
   CJSX_ATTR_KEY: 'CJSX_ATTR_KEY'
   CJSX_ATTR_VAL: 'CJSX_ATTR_VAL'
+  CJSX_ATTR_SPREAD: 'CJSX_ATTR_SPREAD'
 
   # tokens
   # these aren't really used as there aren't distinct lex/parse steps
