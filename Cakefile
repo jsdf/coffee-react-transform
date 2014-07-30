@@ -56,7 +56,7 @@ task 'test', 'run tests', -> build test
 
 task 'watch:test', 'watch and run tests', ->
   TESTFILES.forEach (testfile) ->
-    fs.watchFile "test/#{testfile}", interval: 1000, -> build -> setTimeout(test, 200)
+    fs.watchFile "test/#{testfile}", interval: 1000, -> build test
   SOURCEFILES.forEach (sourcefile) ->
-    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, -> build -> setTimeout(test, 200)
+    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, -> build test
   log "watching..." , green
