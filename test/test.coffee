@@ -2,7 +2,16 @@ require('coffee-script').register()
 fs = require 'fs'
 {exec} = require 'child_process'
 coffeeEval = require('coffee-script').eval
-transform = require '../'
+
+if process.env.DEBUG
+  Parser = require '../src/parser'
+  serialise = require '../src/serialiser'
+  transform = (code, opts) ->
+    parseTree = new Parser().parse(code, opts)
+    console.log(JSON.stringify(parseTree, null, 2))
+    serialise(parseTree)
+else
+  transform = require '../'
 
 coffeeEvalOpts =
   sandbox:
