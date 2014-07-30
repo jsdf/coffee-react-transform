@@ -31,13 +31,54 @@ serialiseNode = (node) ->
 
   serialised
 
-
 genericBranchSerialiser = (node, env) ->
   node.children
     .map((child) -> env.serialiseNode child)
     .join('')
 
 genericLeafSerialiser = (node, env) -> node.value
+
+serialiseAttributePairs = (children) ->
+  # whitespace (particularly newlines) must be maintained
+  # to ensure line number parity
+  
+  # sort children into whitespace and semantic (non whitespace) groups
+  # this seems wrong :\
+  [whitespaceChildren, semanticChildren] = children.reduce((partitionedChildren, child) ->
+    if child.type is $.CJSX_WHITESPACE
+      partitionedChildren[0].push child
+    else
+      partitionedChildren[1].push child
+    partitionedChildren
+  , [[],[]])
+
+  indexOfLastSemanticChild = children.lastIndexOf(last(semanticChildren))
+
+  isBeforeLastSemanticChild = (childIndex) ->
+    childIndex < indexOfLastSemanticChild
+
+  if semanticChildren.length
+    serialisedChildren = for child, childIndex in children
+      serialisedChild = env.serialiseNode child
+      if child.type is $.CJSX_WHITESPACE
+        if containsNewlines(serialisedChild)
+          if isBeforeLastSemanticChild(childIndex)
+            # escaping newlines within attr object helps avoid 
+            # parse errors in tags which span multiple lines
+            serialisedChild.replace('\n',' \\\n')
+          else
+            # but escaped newline at end of attr object is not allowed
+            serialisedChild
+        else
+          null # whitespace without newlines is not significant
+      else if isBeforeLastSemanticChild(childIndex)
+        serialisedChild+', '
+      else
+        serialisedChild
+      
+    '{'+serialisedChildren.join('')+'}'
+  else
+    'null'
 
 serialise.serialisers = serialisers =
   ROOT: genericBranchSerialiser
@@ -71,46 +112,10 @@ serialise.serialisers = serialisers =
     '('+childrenSerialised+')'
 
   CJSX_ATTRIBUTES: (node, env) ->
-    # whitespace (particularly newlines) must be maintained
-    # to ensure line number parity
-    
-    # sort children into whitespace and semantic (non whitespace) groups
-    # this seems wrong :\
-    [whitespaceChildren, semanticChildren] = node.children.reduce((partitionedChildren, child) ->
-      if child.type is $.CJSX_WHITESPACE
-        partitionedChildren[0].push child
-      else
-        partitionedChildren[1].push child
-      partitionedChildren
-    , [[],[]])
-
-    indexOfLastSemanticChild = node.children.lastIndexOf(last(semanticChildren))
-
-    isBeforeLastSemanticChild = (childIndex) ->
-      childIndex < indexOfLastSemanticChild
-
-    if semanticChildren.length
-      serialisedChildren = for child, childIndex in node.children
-        serialisedChild = env.serialiseNode child
-        if child.type is $.CJSX_WHITESPACE
-          if containsNewlines(serialisedChild)
-            if isBeforeLastSemanticChild(childIndex)
-              # escaping newlines within attr object helps avoid 
-              # parse errors in tags which span multiple lines
-              serialisedChild.replace('\n',' \\\n')
-            else
-              # but escaped newline at end of attr object is not allowed
-              serialisedChild
-          else
-            null # whitespace without newlines is not significant
-        else if isBeforeLastSemanticChild(childIndex)
-          serialisedChild+', '
-        else
-          serialisedChild
-        
-      '{'+serialisedChildren.join('')+'}'
+    if node.children.some (child) -> child.type is $.CJSX_ATTR_SPREAD
+      serialiseAttributePairs(node.children)
     else
-      'null'
+      serialiseAttributePairs(node.children)
 
   CJSX_ATTR_PAIR: (node, env) ->
     node.children
