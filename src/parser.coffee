@@ -165,7 +165,6 @@ module.exports = class Parser
     [ input, attrName, doubleQuotedVal,
       singleQuotedVal, cjsxEscVal, bareVal, 
       spreadAttr, whitespace ] = match
-    console.log(match)
 
     if attrName
       if doubleQuotedVal # "value"
@@ -198,10 +197,10 @@ module.exports = class Parser
         ])
         return input.length
     else if spreadAttr # {... x, y}
-      console.log('spreadAttr', spreadAttr)
-      for value, index in spreadAttr.split(',')
-        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_SPREAD, value)
-      return input.length
+      @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTR_SPREAD
+      # on next iteration of parse loop, '{' will trigger CJSX_ESC state and be
+      # parsed as CJSX_ESC (which has similar properties), to be transformed later
+      return input.indexOf('{')
     else if whitespace
       @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
       return input.length
@@ -211,7 +210,8 @@ module.exports = class Parser
         first_line: @chunkLine, first_column: @chunkColumn
 
   cjsxEscape: ->
-    return 0 unless @chunk.charAt(0) is '{' and @currentState() in [$.CJSX_EL, $.CJSX_ATTR_PAIR]
+    return 0 unless @chunk.charAt(0) is '{' and
+    @currentState() in [$.CJSX_EL, $.CJSX_ATTR_PAIR, $.CJSX_ATTR_SPREAD]
 
     @pushActiveBranchNode parseTreeBranchNode $.CJSX_ESC
     @activeBranchNode().stack = 1 # keep track of opening and closing braces
@@ -222,8 +222,8 @@ module.exports = class Parser
 
     if @activeBranchNode().stack is 0
       @popActiveBranchNode() # close cjsx escape
-      if @currentState() is $.CJSX_ATTR_PAIR
-        @popActiveBranchNode() # close cjsx escape attr pair
+      if @currentState() in [$.CJSX_ATTR_PAIR, $.CJSX_ATTR_SPREAD]
+        @popActiveBranchNode() # close cjsx escape attr pair/spread
       return 1
     else
       return 0
@@ -415,7 +415,7 @@ TAG_ATTRIBUTES = ///
       )
     )?
   )
-  | (?: {...( [\s\S]+ ) } ) # spread attributes (captured)
+  | (?: {...( [\s\S]* ) } ) # spread attributes (captured)
   | ( [\s\n]+ ) # whitespace (captured)
 ///
 

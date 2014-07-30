@@ -1,5 +1,5 @@
 
-{last} = require './helpers'
+{last, find} = require './helpers'
 
 $ = require './symbols'
 
@@ -38,7 +38,44 @@ genericBranchSerialiser = (node, env) ->
 
 genericLeafSerialiser = (node, env) -> node.value
 
-serialiseAttributePairs = (children) ->
+firstNonWhitespaceChild = (children) ->
+  find.call children, (child) ->
+    child.type isnt $.CJSX_WHITESPACE
+
+serialiseSpreadAndPairAttributes = (children, env) ->
+  assigns = []
+  pairAttrsBuffer = []
+
+  flushPairs = ->
+    if pairAttrsBuffer.length
+      serialisedChild = serialiseAttributePairs(pairAttrsBuffer, env)
+      assigns.push(serialisedChild) if serialisedChild # skip null
+      pairAttrsBuffer = [] # reset buffer
+
+  if firstNonWhitespaceChild(children)?.type is $.CJSX_ATTR_SPREAD
+    assigns.push('{}')
+
+  for child, childIndex in children
+    if child.type is $.CJSX_ATTR_SPREAD
+      flushPairs()
+      # spread attrs are implemented as a variant of CJSX_ESC attrs
+      # which is a bit of a hack, but they have lots of similar properties.
+      # however we don't want to serialise them as CJSX_ESC, 
+      # so we'll just grab out the value
+      spreadText = child # CJSX_ATTR_SPREAD node
+        .children[0] # CJSX_ESC node
+        .children[0] # CS node
+        .value # CS node value
+        .substring(3) # omit '...'
+      assigns.push(spreadText)
+    else
+      pairAttrsBuffer.push(child)
+
+    flushPairs()
+
+  "Object.assign(#{assigns.join(', ')})"
+
+serialiseAttributePairs = (children, env) ->
   # whitespace (particularly newlines) must be maintained
   # to ensure line number parity
   
@@ -78,7 +115,7 @@ serialiseAttributePairs = (children) ->
       
     '{'+serialisedChildren.join('')+'}'
   else
-    'null'
+    null
 
 serialise.serialisers = serialisers =
   ROOT: genericBranchSerialiser
@@ -112,10 +149,10 @@ serialise.serialisers = serialisers =
     '('+childrenSerialised+')'
 
   CJSX_ATTRIBUTES: (node, env) ->
-    if node.children.some (child) -> child.type is $.CJSX_ATTR_SPREAD
-      serialiseAttributePairs(node.children)
+    if node.children.some((child) -> child.type is $.CJSX_ATTR_SPREAD)
+      serialiseSpreadAndPairAttributes(node.children, env)
     else
-      serialiseAttributePairs(node.children)
+      serialiseAttributePairs(node.children, env) or 'null'
 
   CJSX_ATTR_PAIR: (node, env) ->
     node.children
