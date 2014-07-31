@@ -167,13 +167,13 @@ module.exports = class Parser
       spreadAttr, whitespace ] = match
 
     if attrName
-      if doubleQuotedVal # "value"
+      if doubleQuotedVal? # "value"
         @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
           parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
           parseTreeLeafNode($.CJSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
         ])
         return input.length
-      else if singleQuotedVal # 'value'
+      else if singleQuotedVal? # 'value'
         @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
           parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
           parseTreeLeafNode($.CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
@@ -201,7 +201,7 @@ module.exports = class Parser
       # on next iteration of parse loop, '{' will trigger CJSX_ESC state and be
       # parsed as CJSX_ESC (which has similar properties), to be transformed later
       return input.indexOf('{')
-    else if whitespace
+    else if whitespace?
       @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
       return input.length
     else
