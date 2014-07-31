@@ -70,6 +70,10 @@ exports.some = Array::some ? (fn) ->
   return true for e in this when fn e
   false
 
+# Typical Array::find
+exports.find = Array::find ? (fn) ->
+  return e for e in this when fn e
+
 # Throws a SyntaxError from a given location.
 # The error's `toString` will return an error message following the "standard"
 # format <filename>:<line>:<col>: <message> plus the line with the error and a
