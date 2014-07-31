@@ -10,7 +10,6 @@ unless process.env.NODE_DISABLE_COLORS
   green = '\x1B[0;32m'
   reset = '\x1B[0m'
 
-
 SOURCEFILES = ['transformer', 'parser', 'serialiser', 'symbols', 'helpers']
 TESTFILES = ['test.coffee','output-testcases.txt','eval-testcases.txt']
 JSFILES = ['htmlelements.js', 'entitydecode.js', 'stringescape.js']
@@ -53,6 +52,13 @@ test = -> coffee ['test/test.coffee']
 task 'build', 'build cjsx transformer from source', build
 
 task 'test', 'run tests', -> build test
+
+task 'watch', 'watch and build', ->
+  SOURCEFILES.forEach (sourcefile) ->
+    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, ->
+      build ->
+        log 'rebuild complete', bold
+  log "watching..." , green
 
 task 'watch:test', 'watch and run tests', ->
   TESTFILES.forEach (testfile) ->

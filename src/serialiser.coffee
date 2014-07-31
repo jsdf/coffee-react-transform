@@ -9,125 +9,124 @@ stringEscape = require './stringescape'
 
 entityDecode = require './entitydecode'
 
-module.exports = serialise = (parseTree) ->
-  env = {serialiseNode}
-  if parseTree.children and
-  parseTree.children.length and
-  parseTree.children[0].type is $.CJSX_PRAGMA
-    env.domObject = parseTree.children[0].value
-  else
-    env.domObject = 'React.DOM'
+module.exports = exports = serialise = (parseTree) ->
+  new Serialiser().serialise(parseTree)
 
-  env.serialiseNode(parseTree)
+class Serialiser
+  serialise: (parseTree) ->
+    if parseTree.children and
+    parseTree.children.length and
+    parseTree.children[0].type is $.CJSX_PRAGMA
+      @domObject = parseTree.children[0].value
+    else
+      @domObject = 'React.DOM'
 
-serialiseNode = (node) ->
-  unless serialisers[node.type]?
-    throw new Error("unknown parseTree node type #{node.type}")
+    @serialiseNode(parseTree)
 
-  serialised = serialisers[node.type](node, this)
+  serialiseNode: (node) ->
+    unless nodeSerialisers[node.type]?
+      throw new Error("unknown parseTree node type #{node.type}")
 
-  unless typeof serialised is 'string' or serialised is null
-    throw new Error("serialiser #{node.type} didn\'t return a string")
+    serialised = nodeSerialisers[node.type].call(this, node)
 
-  serialised
+    unless typeof serialised is 'string' or serialised is null
+      throw new Error("serialiser #{node.type} didn\'t return a string")
 
-genericBranchSerialiser = (node, env) ->
+    serialised
+
+  serialiseSpreadAndPairAttributes: (children) ->
+    assigns = []
+    pairAttrsBuffer = []
+
+    flushPairs = =>
+      if pairAttrsBuffer.length
+        serialisedChild = @serialiseAttributePairs(pairAttrsBuffer)
+        assigns.push(serialisedChild) if serialisedChild # skip null
+        pairAttrsBuffer = [] # reset buffer
+
+    if firstNonWhitespaceChild(children)?.type is $.CJSX_ATTR_SPREAD
+      assigns.push('{}')
+
+    for child, childIndex in children
+      if child.type is $.CJSX_ATTR_SPREAD
+        flushPairs()
+        # spread attrs are implemented as a variant of CJSX_ESC attrs
+        # which is a bit of a hack, but they have lots of similar properties.
+        # however we don't want to serialise them as CJSX_ESC, 
+        # so we'll just grab out the value
+        spreadText = child # CJSX_ATTR_SPREAD node
+          .children[0] # CJSX_ESC node
+          .children[0] # CS node
+          .value # CS node value
+          .substring(3) # omit '...'
+        assigns.push(spreadText)
+      else
+        pairAttrsBuffer.push(child)
+
+      flushPairs()
+
+    "Object.assign(#{assigns.join(', ')})"
+
+  serialiseAttributePairs: (children) ->
+    # whitespace (particularly newlines) must be maintained
+    # to ensure line number parity
+    
+    # sort children into whitespace and semantic (non whitespace) groups
+    # this seems wrong :\
+    [whitespaceChildren, semanticChildren] = children.reduce((partitionedChildren, child) ->
+      if child.type is $.CJSX_WHITESPACE
+        partitionedChildren[0].push child
+      else
+        partitionedChildren[1].push child
+      partitionedChildren
+    , [[],[]])
+
+    indexOfLastSemanticChild = children.lastIndexOf(last(semanticChildren))
+
+    isBeforeLastSemanticChild = (childIndex) ->
+      childIndex < indexOfLastSemanticChild
+
+    if semanticChildren.length
+      serialisedChildren = for child, childIndex in children
+        serialisedChild = @serialiseNode child
+        if child.type is $.CJSX_WHITESPACE
+          if containsNewlines(serialisedChild)
+            if isBeforeLastSemanticChild(childIndex)
+              # escaping newlines within attr object helps avoid 
+              # parse errors in tags which span multiple lines
+              serialisedChild.replace('\n',' \\\n')
+            else
+              # but escaped newline at end of attr object is not allowed
+              serialisedChild
+          else
+            null # whitespace without newlines is not significant
+        else if isBeforeLastSemanticChild(childIndex)
+          serialisedChild+', '
+        else
+          serialisedChild
+        
+      '{'+serialisedChildren.join('')+'}'
+    else
+      null
+
+genericBranchSerialiser = (node) ->
   node.children
-    .map((child) -> env.serialiseNode child)
+    .map((child) => @serialiseNode child)
     .join('')
 
-genericLeafSerialiser = (node, env) -> node.value
+genericLeafSerialiser = (node) -> node.value
 
-firstNonWhitespaceChild = (children) ->
-  find.call children, (child) ->
-    child.type isnt $.CJSX_WHITESPACE
-
-serialiseSpreadAndPairAttributes = (children, env) ->
-  assigns = []
-  pairAttrsBuffer = []
-
-  flushPairs = ->
-    if pairAttrsBuffer.length
-      serialisedChild = serialiseAttributePairs(pairAttrsBuffer, env)
-      assigns.push(serialisedChild) if serialisedChild # skip null
-      pairAttrsBuffer = [] # reset buffer
-
-  if firstNonWhitespaceChild(children)?.type is $.CJSX_ATTR_SPREAD
-    assigns.push('{}')
-
-  for child, childIndex in children
-    if child.type is $.CJSX_ATTR_SPREAD
-      flushPairs()
-      # spread attrs are implemented as a variant of CJSX_ESC attrs
-      # which is a bit of a hack, but they have lots of similar properties.
-      # however we don't want to serialise them as CJSX_ESC, 
-      # so we'll just grab out the value
-      spreadText = child # CJSX_ATTR_SPREAD node
-        .children[0] # CJSX_ESC node
-        .children[0] # CS node
-        .value # CS node value
-        .substring(3) # omit '...'
-      assigns.push(spreadText)
-    else
-      pairAttrsBuffer.push(child)
-
-    flushPairs()
-
-  "Object.assign(#{assigns.join(', ')})"
-
-serialiseAttributePairs = (children, env) ->
-  # whitespace (particularly newlines) must be maintained
-  # to ensure line number parity
-  
-  # sort children into whitespace and semantic (non whitespace) groups
-  # this seems wrong :\
-  [whitespaceChildren, semanticChildren] = children.reduce((partitionedChildren, child) ->
-    if child.type is $.CJSX_WHITESPACE
-      partitionedChildren[0].push child
-    else
-      partitionedChildren[1].push child
-    partitionedChildren
-  , [[],[]])
-
-  indexOfLastSemanticChild = children.lastIndexOf(last(semanticChildren))
-
-  isBeforeLastSemanticChild = (childIndex) ->
-    childIndex < indexOfLastSemanticChild
-
-  if semanticChildren.length
-    serialisedChildren = for child, childIndex in children
-      serialisedChild = env.serialiseNode child
-      if child.type is $.CJSX_WHITESPACE
-        if containsNewlines(serialisedChild)
-          if isBeforeLastSemanticChild(childIndex)
-            # escaping newlines within attr object helps avoid 
-            # parse errors in tags which span multiple lines
-            serialisedChild.replace('\n',' \\\n')
-          else
-            # but escaped newline at end of attr object is not allowed
-            serialisedChild
-        else
-          null # whitespace without newlines is not significant
-      else if isBeforeLastSemanticChild(childIndex)
-        serialisedChild+', '
-      else
-        serialisedChild
-      
-    '{'+serialisedChildren.join('')+'}'
-  else
-    null
-
-serialise.serialisers = serialisers =
+nodeSerialisers =
   ROOT: genericBranchSerialiser
 
   CJSX_PRAGMA: -> null
 
-  CJSX_EL: (node, env) ->
+  CJSX_EL: (node) ->
     serialisedChildren = []
     accumulatedWhitespace = ''
 
     for child in node.children
-      serialisedChild = env.serialiseNode child
+      serialisedChild = @serialiseNode child
       if child? # filter empty text nodes
         if WHITESPACE_ONLY.test serialisedChild
           accumulatedWhitespace += serialisedChild
@@ -139,27 +138,27 @@ serialise.serialisers = serialisers =
       serialisedChildren[serialisedChildren.length-1] += accumulatedWhitespace
       accumulatedWhitespace = ''
 
-    prefix = if HTML_ELEMENTS[node.value]? then env.domObject+'.' else ''
+    prefix = if HTML_ELEMENTS[node.value]? then @domObject+'.' else ''
     prefix+node.value+'('+serialisedChildren.join(', ')+')'
 
-  CJSX_ESC: (node, env) ->
+  CJSX_ESC: (node) ->
     childrenSerialised = node.children
-      .map((child) -> env.serialiseNode child)
+      .map((child) => @serialiseNode child)
       .join('')
     '('+childrenSerialised+')'
 
-  CJSX_ATTRIBUTES: (node, env) ->
+  CJSX_ATTRIBUTES: (node) ->
     if node.children.some((child) -> child.type is $.CJSX_ATTR_SPREAD)
-      serialiseSpreadAndPairAttributes(node.children, env)
+      @serialiseSpreadAndPairAttributes(node.children)
     else
-      serialiseAttributePairs(node.children, env) or 'null'
+      @serialiseAttributePairs(node.children) or 'null'
 
-  CJSX_ATTR_PAIR: (node, env) ->
+  CJSX_ATTR_PAIR: (node) ->
     node.children
-      .map((child) -> env.serialiseNode child)
+      .map((child) => @serialiseNode child)
       .join(': ')
 
-  CJSX_ATTR_SPREAD: (node, env) ->
+  CJSX_ATTR_SPREAD: (node) ->
     node.value
 
   # leaf nodes
@@ -211,6 +210,10 @@ serialise.serialisers = serialisers =
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser
 
+firstNonWhitespaceChild = (children) ->
+  find.call children, (child) ->
+    child.type isnt $.CJSX_WHITESPACE
+
 containsNewlines = (text) -> text.indexOf('\n') > -1
 
 SPACES_ONLY = /^\s+$/
@@ -221,3 +224,5 @@ WHITESPACE_ONLY = /^[\n\s]+$/
 TEXT_LEADING_WHITESPACE = /^\s*?\n\s*/
 TEXT_TRAILING_WHITESPACE = /\s*?\n\s*?$/
 
+exports.Serialiser = Serialiser
+exports.nodeSerialisers = nodeSerialisers
