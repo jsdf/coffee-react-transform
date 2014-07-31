@@ -573,4 +573,12 @@ Component(Object.assign({}, x,
 )
 ##end
 
-
+##desc
+Empty strings are not converted to true 
+##input
+<Component val='' />
+<Component val="" />
+##expected
+Component({"val": ''})
+Component({"val": ""})
+##end
