@@ -4,13 +4,13 @@
 
 $ = require './symbols'
 
-# parse tree node builders
-parseTreeLeafNode = (type, value = null) -> {type, value}
-parseTreeBranchNode = (type, value = null, children = []) -> {type, value, children}
+# parse tree node factories
+ParseTreeLeafNode = (type, value = null) -> {type, value}
+ParseTreeBranchNode = (type, value = null, children = []) -> {type, value, children}
 
 module.exports = class Parser
   parse: (code, @opts = {}) ->
-    @parseTree = parseTreeBranchNode @opts.root or $.ROOT # concrete syntax tree (initialised with root node)
+    @parseTree = ParseTreeBranchNode @opts.root or $.ROOT # concrete syntax tree (initialised with root node)
     @activeStates = [@parseTree] # stack tracking current parse tree position (starting with root)
     @chunkLine = 0 # The start line for the current @chunk.
     @chunkColumn =  0 # The start column of the current @chunk.
@@ -70,10 +70,10 @@ module.exports = class Parser
           prefix = pragmaMatch[1]
         else
           prefix = 'React.DOM'
-        @addLeafNodeToActiveBranch parseTreeLeafNode $.CJSX_PRAGMA, prefix
+        @addLeafNodeToActiveBranch ParseTreeLeafNode $.CJSX_PRAGMA, prefix
         return comment.length
 
-    @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_COMMENT, comment
+    @addLeafNodeToActiveBranch ParseTreeLeafNode $.CS_COMMENT, comment
     comment.length
 
   # Matches heredocs
@@ -81,7 +81,7 @@ module.exports = class Parser
     return 0 unless match = HEREDOC.exec @chunk
     heredoc = match[0]
 
-    @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_HEREDOC, heredoc
+    @addLeafNodeToActiveBranch ParseTreeLeafNode $.CS_HEREDOC, heredoc
 
     heredoc.length
 
@@ -93,7 +93,7 @@ module.exports = class Parser
       when '"' then string = @balancedString @chunk, '"'
     return 0 unless string
 
-    @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_STRING, string
+    @addLeafNodeToActiveBranch ParseTreeLeafNode $.CS_STRING, string
 
     string.length
 
@@ -112,7 +112,7 @@ module.exports = class Parser
     return 0 if regex.indexOf("\n") > -1 # no newlines in a normal regex
     # Avoid conflicts with floor division operator.
     return 0 if regex is '//'
-    @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_REGEX, match
+    @addLeafNodeToActiveBranch ParseTreeLeafNode $.CS_REGEX, match
     match.length
 
   # Matches multiline extended regular expressions.
@@ -120,7 +120,7 @@ module.exports = class Parser
     return 0 unless match = HEREGEX.exec @chunk
     [heregex, body, flags] = match
 
-    @addLeafNodeToActiveBranch parseTreeLeafNode $.CS_HEREGEX, heregex
+    @addLeafNodeToActiveBranch ParseTreeLeafNode $.CS_HEREGEX, heregex
 
     heregex.length
 
@@ -129,7 +129,7 @@ module.exports = class Parser
     return 0 unless @chunk.charAt(0) is '`' and match = JSTOKEN.exec @chunk
     script = match[0]
 
-    @addLeafNodeToActiveBranch parseTreeLeafNode $.JS_ESC, script
+    @addLeafNodeToActiveBranch ParseTreeLeafNode $.JS_ESC, script
 
     script.length
 
@@ -139,8 +139,8 @@ module.exports = class Parser
 
     return 0 unless selfClosing or @chunk.indexOf("</#{tagName}>", input.length) > -1
 
-    @pushActiveBranchNode parseTreeBranchNode $.CJSX_EL, tagName
-    @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTRIBUTES
+    @pushActiveBranchNode ParseTreeBranchNode $.CJSX_EL, tagName
+    @pushActiveBranchNode ParseTreeBranchNode $.CJSX_ATTRIBUTES
 
     1+tagName.length
 
@@ -168,41 +168,41 @@ module.exports = class Parser
 
     if attrName
       if doubleQuotedVal? # "value"
-        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-          parseTreeLeafNode($.CJSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
+        @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
         ])
         return input.length
       else if singleQuotedVal? # 'value'
-        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-          parseTreeLeafNode($.CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
+        @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
         ])
         return input.length
       else if cjsxEscVal # {value}
-        @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTR_PAIR
-        @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+        @pushActiveBranchNode ParseTreeBranchNode $.CJSX_ATTR_PAIR
+        @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
         # on next iteration of parse loop, '{' will trigger CJSX_ESC state
         return input.indexOf('{') # consume up to start of cjsx escape
       else if bareVal # value
-        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-          parseTreeLeafNode($.CJSX_ATTR_VAL, bareVal)
+        @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_VAL, bareVal)
         ])
         return input.length
       else # valueless attr
-        @addLeafNodeToActiveBranch parseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          parseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-          parseTreeLeafNode($.CJSX_ATTR_VAL, 'true')
+        @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_VAL, 'true')
         ])
         return input.length
     else if spreadAttr # {... x, y}
-      @pushActiveBranchNode parseTreeBranchNode $.CJSX_ATTR_SPREAD
+      @pushActiveBranchNode ParseTreeBranchNode $.CJSX_ATTR_SPREAD
       # on next iteration of parse loop, '{' will trigger CJSX_ESC state and be
       # parsed as CJSX_ESC (which has similar properties), to be transformed later
       return input.indexOf('{')
     else if whitespace?
-      @addLeafNodeToActiveBranch parseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
+      @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
       return input.length
     else
       throwSyntaxError \
@@ -213,7 +213,7 @@ module.exports = class Parser
     return 0 unless @chunk.charAt(0) is '{' and
     @currentState() in [$.CJSX_EL, $.CJSX_ATTR_PAIR, $.CJSX_ATTR_SPREAD]
 
-    @pushActiveBranchNode parseTreeBranchNode $.CJSX_ESC
+    @pushActiveBranchNode ParseTreeBranchNode $.CJSX_ESC
     @activeBranchNode().stack = 1 # keep track of opening and closing braces
     return 1
 
@@ -246,7 +246,7 @@ module.exports = class Parser
     return 0 unless @currentState() is $.CJSX_EL
 
     unless @newestNode().type is $.CJSX_TEXT
-      @addLeafNodeToActiveBranch parseTreeLeafNode $.CJSX_TEXT, '' # init value as string
+      @addLeafNodeToActiveBranch ParseTreeLeafNode $.CJSX_TEXT, '' # init value as string
 
     # newestNode is (now) $.CJSX_TEXT
     @newestNode().value += @chunk.charAt 0
@@ -266,7 +266,7 @@ module.exports = class Parser
           return 0
     
     unless @newestNode().type is $.CS
-      @addLeafNodeToActiveBranch parseTreeLeafNode $.CS, '' # init value as string
+      @addLeafNodeToActiveBranch ParseTreeLeafNode $.CS, '' # init value as string
 
     # newestNode is (now) $.CS
     @newestNode().value += @chunk.charAt 0
