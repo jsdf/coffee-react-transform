@@ -88,6 +88,20 @@ If you want to use coffee-react-transform in the browser or under ExecJS or some
 </script>
 ```
 
+### Spread attributes
+A recent addition to JSX (and CJSX) is 'spread attributes' which allow merging an object of props into a component, eg:
+```coffee
+extraProps = color: 'red', speed: 'fast'
+<div color="blue" {... extraProps} />
+```
+which is transformed to:
+```coffee
+extraProps = color: 'red', speed: 'fast'
+React.DOM.div(Object.assign({"color": "blue"},  extraProps)
+```
+If you use this syntax in your code, be sure to include a shim for `Object.assign` for browsers/environments which don't yet support it (basically all of them).
+[es6-shim](https://github.com/es-shims/es6-shim) and [object.assign](https://www.npmjs.org/package/object.assign) are two possible choices.
+
 ### Tests
 
 `cake test` or `cake watch:test`
