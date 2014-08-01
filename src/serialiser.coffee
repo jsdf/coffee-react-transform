@@ -50,16 +50,7 @@ class Serialiser
     for child, childIndex in children
       if child.type is $.CJSX_ATTR_SPREAD
         flushPairs()
-        # spread attrs are implemented as a variant of CJSX_ESC attrs
-        # which is a bit of a hack, but they have lots of similar properties.
-        # however we don't want to serialise them as CJSX_ESC, 
-        # so we'll just grab out the value
-        spreadText = child # CJSX_ATTR_SPREAD node
-          .children[0] # CJSX_ESC node
-          .children[0] # CS node
-          .value # CS node value
-          .substring(3) # omit '...'
-        assigns.push(spreadText)
+        assigns.push(child.value)
       else
         pairAttrsBuffer.push(child)
 

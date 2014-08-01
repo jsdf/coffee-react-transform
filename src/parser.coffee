@@ -196,11 +196,9 @@ module.exports = class Parser
           ParseTreeLeafNode($.CJSX_ATTR_VAL, 'true')
         ])
         return input.length
-    else if spreadAttr # {... x, y}
-      @pushActiveBranchNode ParseTreeBranchNode $.CJSX_ATTR_SPREAD
-      # on next iteration of parse loop, '{' will trigger CJSX_ESC state and be
-      # parsed as CJSX_ESC (which has similar properties), to be transformed later
-      return input.indexOf('{')
+    else if spreadAttr # {...x}
+      @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_ATTR_SPREAD, spreadAttr)
+      return input.length
     else if whitespace?
       @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
       return input.length
@@ -211,7 +209,7 @@ module.exports = class Parser
 
   cjsxEscape: ->
     return 0 unless @chunk.charAt(0) is '{' and
-    @currentState() in [$.CJSX_EL, $.CJSX_ATTR_PAIR, $.CJSX_ATTR_SPREAD]
+    @currentState() in [$.CJSX_EL, $.CJSX_ATTR_PAIR]
 
     @pushActiveBranchNode ParseTreeBranchNode $.CJSX_ESC
     @activeBranchNode().stack = 1 # keep track of opening and closing braces
@@ -222,8 +220,8 @@ module.exports = class Parser
 
     if @activeBranchNode().stack is 0
       @popActiveBranchNode() # close cjsx escape
-      if @currentState() in [$.CJSX_ATTR_PAIR, $.CJSX_ATTR_SPREAD]
-        @popActiveBranchNode() # close cjsx escape attr pair/spread
+      if @currentState() in [$.CJSX_ATTR_PAIR]
+        @popActiveBranchNode() # close cjsx escape attr pair
       return 1
     else
       return 0
@@ -383,7 +381,7 @@ OPENING_TAG = /// ^
               )
             )
           | \s+[\w-]+  # bare attribute 
-          | \s+{...[\s\S]*?}  # spread attribute
+          | \s+\{\.\.\.\s*?[^\s{}]+?\s*?\}  # spread attribute
         )?
       )*?
       \s* # whitespace after attr pair
@@ -415,7 +413,7 @@ TAG_ATTRIBUTES = ///
       )
     )?
   )
-  | (?: {...( [\s\S]* ) } ) # spread attributes (captured)
+  | (?: \{\.\.\.(\s*?[^\s{}]+?\s*?)\} ) # spread attributes (captured)
   | ( [\s\n]+ ) # whitespace (captured)
 ///
 
