@@ -1,6 +1,6 @@
 
 # Import the helpers we need.
-{count, starts, compact, last, repeat, throwSyntaxError} = require './helpers'
+{count, starts, compact, last, repeat, throwSyntaxError, assert} = require './helpers'
 
 $ = require './symbols'
 
@@ -200,7 +200,15 @@ module.exports = class Parser
       @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_ATTR_SPREAD, spreadAttr)
       return input.length
     else if whitespace?
-      @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
+      lastAttrNode = last(@activeBranchNode().children)
+      if not lastAttrNode
+        assert @activeBranchNode().type is $.CJSX_ATTRIBUTES,
+          "active branch node is attributes list"
+        @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_WHITESPACE, whitespace)
+      else
+        assert lastAttrNode.type in [$.CJSX_ATTR_PAIR, $.CJSX_ATTR_SPREAD],
+          "last attr node added is attr pair or spread attr"
+        lastAttrNode.trailingWhitespace = whitespace
       return input.length
     else
       throwSyntaxError \
@@ -358,6 +366,7 @@ module.exports = class Parser
       prev = letter
     @error "missing #{ stack.pop() }, starting"
 
+addWhitespaceToNode = (node, whitespace) ->
 
 # JSX tag matching regexes
 
@@ -381,10 +390,10 @@ OPENING_TAG = /// ^
               )
             )
           | \s+[\w-]+  # bare attribute 
-          | \s+\{\.\.\.\s*?[^\s{}]+?\s*?\}  # spread attribute
+          | \s+\{\.\.\.[ ]*?[^\s{}]+?[ ]*?\}  # spread attribute
         )?
       )*?
-      \s* # whitespace after attr pair
+      \s*? # whitespace after attr pair
     ) # attributes text (captured)
     (\/?) # self closing? (captured)
   >

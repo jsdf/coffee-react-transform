@@ -41,60 +41,43 @@ class Serialiser
     flushPairs = =>
       if pairAttrsBuffer.length
         serialisedChild = @serialiseAttributePairs(pairAttrsBuffer)
-        assigns.push(serialisedChild) if serialisedChild # skip null
+        assigns.push(serialisedChild+', ') if serialisedChild # skip null
         pairAttrsBuffer = [] # reset buffer
 
-    if firstNonWhitespaceChild(children)?.type is $.CJSX_ATTR_SPREAD
-      assigns.push('{}')
+    if children[0]?.type is $.CJSX_ATTR_SPREAD
+      assigns.push('{}, ')
 
     for child, childIndex in children
       if child.type is $.CJSX_ATTR_SPREAD
         flushPairs()
-        assigns.push(child.value)
+        assigns.push(@serialiseNode(child))
       else
         pairAttrsBuffer.push(child)
 
       flushPairs()
 
-    "Object.assign(#{assigns.join(', ')})"
+    'Object.assign('+stripLastComma(assigns.join(''))+')'
 
   serialiseAttributePairs: (children) ->
     # whitespace (particularly newlines) must be maintained
     # to ensure line number parity
-    
-    # sort children into whitespace and semantic (non whitespace) groups
-    # this seems wrong :\
-    [whitespaceChildren, semanticChildren] = children.reduce((partitionedChildren, child) ->
-      if child.type is $.CJSX_WHITESPACE
-        partitionedChildren[0].push child
-      else
-        partitionedChildren[1].push child
-      partitionedChildren
-    , [[],[]])
-
-    indexOfLastSemanticChild = children.lastIndexOf(last(semanticChildren))
-
-    isBeforeLastSemanticChild = (childIndex) ->
-      childIndex < indexOfLastSemanticChild
-
-    if semanticChildren.length
+    if children.length and not (children.length is 1 and children[0].type is $.CJSX_WHITESPACE) 
       serialisedChildren = for child, childIndex in children
         serialisedChild = @serialiseNode child
         if child.type is $.CJSX_WHITESPACE
-          if containsNewlines(serialisedChild)
-            if isBeforeLastSemanticChild(childIndex)
-              # escaping newlines within attr object helps avoid 
-              # parse errors in tags which span multiple lines
-              serialisedChild.replace('\n',' \\\n')
-            else
-              # but escaped newline at end of attr object is not allowed
-              serialisedChild
-          else
-            null # whitespace without newlines is not significant
-        else if isBeforeLastSemanticChild(childIndex)
-          serialisedChild+', '
+          innerLeadingWhitespace serialisedChild
         else
-          serialisedChild
+          appendTrailingWhitespace child, (
+            if childIndex < children.length - 1
+              if containsNewlines(serialisedChild)
+                # escaping newlines within attr object helps avoid 
+                # parse errors in tags which span multiple lines
+                escapeNewlines serialisedChild
+              else
+                serialisedChild
+            else # last child
+              stripLastComma serialisedChild
+          )
         
       '{'+serialisedChildren.join('')+'}'
     else
@@ -147,10 +130,10 @@ nodeSerialisers =
   CJSX_ATTR_PAIR: (node) ->
     node.children
       .map((child) => @serialiseNode child)
-      .join(': ')
+      .join(': ')+', '
 
   CJSX_ATTR_SPREAD: (node) ->
-    node.value
+    node.value+', '
 
   # leaf nodes
   CS: genericLeafSerialiser
@@ -201,11 +184,23 @@ nodeSerialisers =
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser
 
-firstNonWhitespaceChild = (children) ->
-  find.call children, (child) ->
-    child.type isnt $.CJSX_WHITESPACE
-
 containsNewlines = (text) -> text.indexOf('\n') > -1
+
+appendTrailingWhitespace = (node, serialised) ->
+  if node.trailingWhitespace and containsNewlines(node.trailingWhitespace)
+    serialised + node.trailingWhitespace
+  else
+    serialised
+
+innerLeadingWhitespace = (text) ->
+  if containsNewlines(text)
+    escapeNewlines(text)
+  else
+    null
+
+stripLastComma = (text) -> text.replace(/\s*,\s*$/,'')
+
+escapeNewlines = (text) -> text.replace("\n"," \\\n")
 
 SPACES_ONLY = /^\s+$/
 

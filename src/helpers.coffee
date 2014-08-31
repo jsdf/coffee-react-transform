@@ -136,3 +136,7 @@ exports.nameWhitespaceCharacter = (string) ->
     when '\r' then 'carriage return'
     when '\t' then 'tab'
     else string
+
+exports.assert = (value, message) ->
+  if not value
+    throw new Error("Assertion Failed: #{message}")

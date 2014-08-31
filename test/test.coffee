@@ -2,6 +2,7 @@ require('coffee-script').register()
 fs = require 'fs'
 {exec} = require 'child_process'
 coffeeEval = require('coffee-script').eval
+coffeeCompile = require('coffee-script').compile
 
 if process.env.DEBUG
   Parser = require '../src/parser'
@@ -39,6 +40,20 @@ tryTransform = (input, desc) ->
 
   transformed
 
+tryCompile = (input, desc) ->
+  try
+    compiled = coffeeCompile input
+  catch e
+    e.message = """
+    compile error in testcase: #{desc}
+
+    #{e.stack}
+
+    """
+    throw new Error(e.message)
+
+  compiled
+
 run = ->
   runTestcases 'output', "#{__dirname}/output-testcases.txt"
   runTestcases 'eval', "#{__dirname}/eval-testcases.txt"
@@ -50,6 +65,8 @@ testTypes =
     params: ['desc','input','expected']
     runner: (testcase) ->
       transformed = tryTransform testcase.input, testcase.desc
+
+      tryCompile(transformed, testcase.desc)
 
       console.assert transformed == testcase.expected,
       """
@@ -114,7 +131,10 @@ runTestcases = (type, filepath) ->
 
   for testcase in testcases
     # console.log "#{type} #{testcase.desc}"
-    testTypes[type].runner(testcase)
+    try
+      testTypes[type].runner(testcase)
+    catch e
+      console.error e.message
 
   console.timeEnd("#{type} tests passed")
 
