@@ -228,7 +228,7 @@ setInterval(() ->
 React.createClass
   render: ->
     return <Nav color="blue">
-      {<Profile>click{Math.random(),<Selfclosing coolattr />}</Profile> for i in [start...finish]}
+      {<Profile>click{Math.random()}</Profile> for i in [start...finish]}
     </Nav>
 ##expected
 setInterval(() ->
@@ -241,7 +241,7 @@ setInterval(() ->
 React.createClass
   render: ->
     return Nav({"color": "blue"}, 
-      (Profile(null, "click", (Math.random(),Selfclosing({"coolattr": true}))) for i in [start...finish])
+      (Profile(null, "click", (Math.random())) for i in [start...finish])
     )
 ##end
 

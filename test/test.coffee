@@ -1,7 +1,7 @@
 require('coffee-script').register()
 fs = require 'fs'
 {exec} = require 'child_process'
-coffeeEval = require('coffee-script').eval
+coffeeCompile = require('coffee-script').compile
 
 if process.env.DEBUG
   Parser = require '../src/parser'
@@ -12,18 +12,6 @@ if process.env.DEBUG
     serialise(parseTree)
 else
   transform = require '../'
-
-coffeeEvalOpts =
-  sandbox:
-    React: require './react' # mock react for tests  
-    # stub methods
-    sink: ->
-    call: (cb) -> cb()
-    test: -> true
-    testNot: -> false
-    getNum: -> 2
-    getText: -> "hi"
-    getRange: -> [2..11]
 
 tryTransform = (input, desc) ->
   try
@@ -39,9 +27,22 @@ tryTransform = (input, desc) ->
 
   transformed
 
+tryCompile = (input, desc) ->
+  try
+    compiled = coffeeCompile input
+  catch e
+    e.message = """
+    compile error in testcase: #{desc}
+
+    #{e.stack}
+
+    """
+    throw new Error(e.message)
+
+  compiled
+
 run = ->
   runTestcases 'output', "#{__dirname}/output-testcases.txt"
-  runTestcases 'eval', "#{__dirname}/eval-testcases.txt"
 
 testTypes =
   # simple testing of string equality of 
@@ -50,6 +51,8 @@ testTypes =
     params: ['desc','input','expected']
     runner: (testcase) ->
       transformed = tryTransform testcase.input, testcase.desc
+
+      compiled = tryCompile transformed, testcase.desc
 
       console.assert transformed == testcase.expected,
       """
@@ -66,27 +69,6 @@ testTypes =
       #{transformed}
 
       """
-
-  # coffee eval transformed output to test output syntax correctness
-  'eval': 
-    params: ['desc','input']
-    runner: (testcase) ->
-      transformed = tryTransform testcase.input, testcase.desc
-
-      try
-        coffeeEval transformed, coffeeEvalOpts
-      catch e
-        e.message = """
-
-        #{testcase.desc}
-
-        --- transform output ---
-        #{transformed}
-
-        --- error ---
-        #{e.message}
-        """
-        throw new Error(e.message + '\n' + e.stack )
 
 generateTestcasesParser = (params) ->
   testcaseMatcher = do ->
