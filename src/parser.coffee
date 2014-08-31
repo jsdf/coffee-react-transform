@@ -366,7 +366,7 @@ module.exports = class Parser
 # [3] self closing?
 OPENING_TAG = /// ^
   <
-    ([-A-Za-z0-9_\.]+) # tag name (captured)
+    (@?[-A-Za-z0-9_\.]+) # tag name (captured)
     (
       (?:
         (?:
@@ -391,7 +391,7 @@ OPENING_TAG = /// ^
 ///
 
 # [1] tag name
-CLOSING_TAG = /^<\/([-A-Za-z0-9_\.]+)[^>]*>/
+CLOSING_TAG = /^<\/(@?[-A-Za-z0-9_\.]+)[^>]*>/
 
 # [0] attr=val
 # [1] attr

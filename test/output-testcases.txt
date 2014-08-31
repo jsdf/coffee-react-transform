@@ -578,3 +578,15 @@ Empty strings are not converted to true
 Component({"val": ''})
 Component({"val": ""})
 ##end
+
+##desc
+coffeescript @ syntax in tag name
+##input
+<@component>
+  <component />
+</@component>
+##expected
+@component(null, 
+  component(null)
+)
+##end
