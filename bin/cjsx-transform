@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+var fs, transform;
+
+fs = require('fs');
+
+transform = require('../lib/transformer').transform;
+
+if (!process.argv[2]) {
+  return console.warn('provide a cjsx file to compile as the first argument');
+}
+
+process.stdout.write(transform(fs.readFileSync(process.argv[2], 'utf8')));
