@@ -61,7 +61,7 @@ class Serialiser
   serialiseAttributePairs: (children) ->
     # whitespace (particularly newlines) must be maintained
     # to ensure line number parity
-    
+
     # sort children into whitespace and semantic (non whitespace) groups
     # this seems wrong :\
     [whitespaceChildren, semanticChildren] = children.reduce((partitionedChildren, child) ->
@@ -83,7 +83,7 @@ class Serialiser
         if child.type is $.CJSX_WHITESPACE
           if containsNewlines(serialisedChild)
             if isBeforeLastSemanticChild(childIndex)
-              # escaping newlines within attr object helps avoid 
+              # escaping newlines within attr object helps avoid
               # parse errors in tags which span multiple lines
               serialisedChild.replace('\n',' \\\n')
             else
@@ -95,7 +95,7 @@ class Serialiser
           serialisedChild+', '
         else
           serialisedChild
-        
+
       '{'+serialisedChildren.join('')+'}'
     else
       null
@@ -129,8 +129,9 @@ nodeSerialisers =
       serialisedChildren[serialisedChildren.length-1] += accumulatedWhitespace
       accumulatedWhitespace = ''
 
-    prefix = if HTML_ELEMENTS[node.value]? then @domObject+'.' else ''
-    prefix+node.value+'('+serialisedChildren.join(', ')+')'
+    prefix = 'React.createElement('
+    prefix += if HTML_ELEMENTS[node.value]? then @domObject+'.' else ''
+    prefix+node.value+', '+serialisedChildren.join(', ')+')'
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children
@@ -173,9 +174,9 @@ nodeSerialisers =
         leftSpace = text.match TEXT_LEADING_WHITESPACE
         rightSpace = text.match TEXT_TRAILING_WHITESPACE
 
-        if leftSpace 
+        if leftSpace
           leftTrim = text.indexOf('\n')
-        else 
+        else
           leftTrim = 0
 
         if rightSpace
