@@ -3,6 +3,9 @@ fs = require 'fs'
 {exec} = require 'child_process'
 coffeeCompile = require('coffee-script').compile
 
+require 'colors'
+jsdiff = require 'diff'
+
 if process.env.DEBUG
   Parser = require '../src/parser'
   serialise = require '../src/serialiser'
@@ -45,8 +48,6 @@ run = ->
   runTestcases 'output', "#{__dirname}/output-testcases.txt"
 
 testTypes =
-  # simple testing of string equality of 
-  # expected output vs actual output
   'output':
     params: ['desc','input','expected']
     runner: (testcase) ->
@@ -54,7 +55,19 @@ testTypes =
 
       compiled = tryCompile transformed, testcase.desc
 
-      console.assert transformed == testcase.expected,
+      # simple assertion of string equality of expected output and actual output
+      pass = transformed is testcase.expected
+
+      diff = unless pass
+        jsdiff.diffChars(testcase.expected, transformed).map((part) ->
+          color = (if part.added then "green" else (if part.removed then "red" else "grey"))
+          text = part.value
+            .replace(/[ ]/g, '█')
+            .replace(/\n/g, '␤\n')
+          text[color]
+        ).join('')
+
+      console.assert pass,
       """
 
       #{testcase.desc}
@@ -67,6 +80,9 @@ testTypes =
 
       --- Actual output ---
       #{transformed}
+
+      --- Diff ---
+      #{diff}
 
       """
 
