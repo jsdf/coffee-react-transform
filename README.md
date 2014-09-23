@@ -10,10 +10,10 @@ car-component.coffee
 # @cjsx React.DOM
 Car = React.createClass
   render: ->
-    <Vehicle doors={4} locked={isLocked()}  data-colour="red" on>
+    <Vehicle doors={4} locked={isLocked()} data-colour="red" on>
       <Parts.FrontSeat />
       <Parts.BackSeat />
-      <p className="kickin">Which seat can I take? {@props?.seat or 'none'}</p>
+      <p className="seat">Which seat can I take? {@props?.seat or 'none'}</p>
     </Vehicle>
 ```
 
@@ -23,18 +23,19 @@ transform
 cjsx-transform car-component.coffee
 ```
 
-output
+output 
 
 ```coffee
 
 Car = React.createClass
   render: ->
-    Vehicle({"doors": (4), "locked": (isLocked()), "data-colour": "red", "on": true},
-      Parts.FrontSeat(null),
-      Parts.BackSeat(null),
-      React.DOM.p({className: "kickin"}, "Which seat can I take? ", (@props?.seat or 'none'))
+    React.createElement(Vehicle, {"doors": (4), "locked": (isLocked()), "data-colour": "red", "on": true}, 
+      React.createElement(Parts.FrontSeat, null), 
+      React.createElement(Parts.BackSeat, null), 
+      React.createElement(React.DOM.p, {"className": "seat"}, "Which seat can I take? ", (@props?.seat or 'none'))
     )
 ```
+Note: this is the output of version 1.x, which supports the [new factoryless creation of elements from classes](https://gist.github.com/sebmarkbage/ae327f2eda03bf165261). If you want the older style JSX output (which just desugars into function calls) then you need to use the 0.x branch, eg. 0.5.1.
 
 ### Try it out
 The [try coffee-react](http://jsdf.github.io/coffee-react-transform/) tool is available to test out some CJSX code and see the CoffeeScript it transforms into.
@@ -84,7 +85,7 @@ If you want to use coffee-react-transform in the browser or under ExecJS or some
 <script src="http://wzrd.in/standalone/coffee-react-transform"></script>
 <script>
   coffeeReactTransform('-> <a />');
-  // returns "-> React.DOM.a(null)"
+  // returns "-> React.createElement(React.DOM.a, null)"
 </script>
 ```
 
@@ -97,14 +98,18 @@ extraProps = color: 'red', speed: 'fast'
 which is transformed to:
 ```coffee
 extraProps = color: 'red', speed: 'fast'
-React.DOM.div(Object.assign({"color": "blue"},  extraProps)
+React.createElement(React.DOM.div, Object.assign({"color": "blue"},  extraProps)
 ```
-If you use this syntax in your code, be sure to include a shim for `Object.assign` for browsers/environments which don't yet support it (basically all of them).
+If you use this syntax in your code, be sure to include a shim for `Object.assign` for browsers/environments which don't yet support it (basically none do so far).
 [es6-shim](https://github.com/es-shims/es6-shim) and [object.assign](https://www.npmjs.org/package/object.assign) are two possible choices.
+
+### Breaking Changes in 1.0
+
+React 0.12 will introduce changes to the way component descriptors are constructed, where the return value of `React.createClass` is not a descriptor factory but simply the component class itself, and descriptors must be created manually using `React.createElement` or by wrapping the component class with `React.createDescriptor`. In preparation for this, coffee-react-transform now outputs calls to `React.createElement` to construct element descriptors from component classes for you, so you won't need to (wrap your classes using `React.createFactory`](https://gist.github.com/sebmarkbage/ae327f2eda03bf165261). However, for this to work you will need to be using at least React 0.11.2, which adds `React.createElement`. 
+
+If you want the older style JSX output (which just desugars into function calls) then you need to use the 0.x branch, eg. 0.5.1.
 
 ### Tests
 
 `cake test` or `cake watch:test`
 
-#### Note about the .cjsx file extension
-The custom file extension recently changed from `.csx` to `.cjsx` to avoid conflicting with an existing C# related file extension, so be sure to update your files accordingly (including changing the pragma to  `@cjsx`). You can also just use `.coffee` as the file extension. Backwards compatibility will be maintained until the next major version.

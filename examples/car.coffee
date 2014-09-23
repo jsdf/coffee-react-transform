@@ -4,11 +4,11 @@ React = require('react')
 
 Car = React.createClass
   render: ->
-    <Car doors=4 safety={getSafetyRating()*2}  data-top-down="yep" checked>
-      <FrontSeat />
-      <BackSeat />
-      <p>Which seat can I take? {@props.seat}</p>
-    </Car>
+    <Vehicle doors={4} locked={isLocked()} data-colour="red" on>
+      <Parts.FrontSeat />
+      <Parts.BackSeat />
+      <p className="seat">Which seat can I take? {@props?.seat or 'none'}</p>
+    </Vehicle>
 
 React.renderComponent <Car seat="front, obvs" />,
   document.getElementById 'container'
