@@ -26,8 +26,7 @@
     "bin/"
   ],
   "bin": {
-    "cjsx-transform": "./bin/cjsx-transform",
-    "csx-transform": "./bin/csx-transform"
+    "cjsx-transform": "./bin/cjsx-transform"
   },
   "homepage": "https://github.com/jsdf/coffee-react-transform",
   "bugs": "https://github.com/jsdf/coffee-react-transform/issues",
