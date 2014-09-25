@@ -108,7 +108,7 @@ If you use this syntax in your code, be sure to include a shim for `Object.assig
 
 ### Breaking Changes in 1.0
 
-React 0.12 will introduce changes to the way component descriptors are constructed, where the return value of `React.createClass` is not a descriptor factory but simply the component class itself, and descriptors must be created manually using `React.createElement` or by wrapping the component class with `React.createDescriptor`. In preparation for this, coffee-react-transform now outputs calls to `React.createElement` to construct element descriptors from component classes for you, so you won't need to (wrap your classes using `React.createFactory`](https://gist.github.com/sebmarkbage/ae327f2eda03bf165261). However, for this to work you will need to be using at least React 0.11.2, which adds `React.createElement`.
+React 0.12 will introduce changes to the way component descriptors are constructed, where the return value of `React.createClass` is not a descriptor factory but simply the component class itself, and descriptors must be created manually using `React.createElement` or by wrapping the component class with `React.createDescriptor`. In preparation for this, coffee-react-transform now outputs calls to `React.createElement` to construct element descriptors from component classes for you, so you won't need to [wrap your classes using `React.createFactory`](https://gist.github.com/sebmarkbage/ae327f2eda03bf165261). However, for this to work you will need to be using at least React 0.11.2, which adds `React.createElement`.
 
 If you want the older style JSX output (which just desugars into function calls) then you need to use the 0.x branch, eg. 0.5.1.
 
