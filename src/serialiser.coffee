@@ -139,7 +139,7 @@ nodeSerialisers =
       prefix = @domObject+'.'
     else
       prefix = ''
-    "#{@reactObject}.createElement(#{prefix}#{node.value}, #{serialisedChildren.join(', ')})"
+    "#{@reactObject}.createElement(#{prefix}#{node.value}, #{serialisedChildren.join(',')})"
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children
