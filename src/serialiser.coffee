@@ -21,6 +21,12 @@ class Serialiser
     else
       @domObject = 'React.DOM'
 
+    domObjectParts = @domObject.split('.')
+    if domObjectParts.length > 1
+      @reactObject = domObjectParts[0]
+    else
+      @reactObject = 'React'
+
     @serialiseNode(parseTree)
 
   serialiseNode: (node) ->
@@ -133,7 +139,7 @@ nodeSerialisers =
       prefix = @domObject+'.'
     else
       prefix = ''
-    "React.createElement(#{prefix}#{node.value}, #{serialisedChildren.join(', ')})"
+    "#{@reactObject}.createElement(#{prefix}#{node.value}, #{serialisedChildren.join(', ')})"
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children

@@ -312,9 +312,9 @@ pragma with alternate dom implementation
 </div>
 ##expected
 
-React.createElement(awesome.fun.div, null, """ a
+awesome.createElement(awesome.fun.div, null, """ a
   asf
-""", React.createElement(awesome.fun.li, {"xy": ("as")}, ( n+1 ), React.createElement(awesome.fun.a, null), " ", React.createElement(awesome.fun.a, null), " ")
+""", awesome.createElement(awesome.fun.li, {"xy": ("as")}, ( n+1 ), awesome.createElement(awesome.fun.a, null), " ", awesome.createElement(awesome.fun.a, null), " ")
 )
 ##end
 
