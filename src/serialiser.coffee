@@ -62,7 +62,7 @@ class Serialiser
 
       flushPairs()
 
-    "Object.assign(#{assigns.join(', ')})"
+    "Object.assign(#{joinList(assigns)})"
 
   serialiseAttributePairs: (children) ->
     # whitespace (particularly newlines) must be maintained
@@ -139,7 +139,7 @@ nodeSerialisers =
       prefix = @domObject+'.'
     else
       prefix = ''
-    "#{@reactObject}.createElement(#{prefix}#{node.value}, #{serialisedChildren.join(',')})"
+    "#{@reactObject}.createElement(#{prefix}#{node.value}, #{joinList(serialisedChildren)})"
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children
@@ -215,6 +215,19 @@ firstNonWhitespaceChild = (children) ->
     child.type isnt $.CJSX_WHITESPACE
 
 containsNewlines = (text) -> text.indexOf('\n') > -1
+
+joinList = (items) ->
+  output = items[items.length-1]
+  i = items.length-2
+
+  while i >= 0
+    if output.charAt(0) is '\n'
+      output = items[i]+','+output
+    else
+      output = items[i]+', '+output
+    i--
+  output
+
 
 SPACES_ONLY = /^\s+$/
 

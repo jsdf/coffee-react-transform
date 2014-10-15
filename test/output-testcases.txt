@@ -109,7 +109,7 @@ React.createElement(Person, {"name": (
     'yes'
   else
     'no'
-)}, 
+)},
 (
 
   for n in a
@@ -130,7 +130,7 @@ nested cjsx within an attribute, with object attr value
   <Person name={<NameComponent attr3={ {'a': {}, b: '{'} } />} />
 </Company>
 ##expected
-React.createElement(Company, null, 
+React.createElement(Company, null,
   React.createElement(Person, {"name": (React.createElement(NameComponent, {"attr3": ( {'a': {}, b: '{'} )}))})
 )
 ##end
@@ -240,7 +240,7 @@ setInterval(() ->
 
 React.createClass
   render: ->
-    return React.createElement(Nav, {"color": "blue"}, 
+    return React.createElement(Nav, {"color": "blue"},
       (React.createElement(Profile, null, "click", (Math.random())) for i in [start...finish])
     )
 ##end
@@ -286,10 +286,10 @@ multiline elements
       test = /432/gm # this is a regex
       6 /432/gm # this is division
   )
-  }, 
-  React.createElement(React.DOM.div, null, 
-  React.createElement(React.DOM.div, null, 
-  React.createElement(React.DOM.div, null, 
+  },
+  React.createElement(React.DOM.div, null,
+  React.createElement(React.DOM.div, null,
+  React.createElement(React.DOM.div, null,
     React.createElement(React.DOM.article, {"name": ( new Date() ), "number": 203,  \
      "range": (getRange())
     }
@@ -395,7 +395,7 @@ REGEX = /// ^
 ##expected
 test = /432/gm # this is a regex
 6 /432/gm # this is division
-React.createElement(tag, null, 
+React.createElement(tag, null,
 (test = /<tag>/), """ \x3C--this is a regex containing something which looks like a tag
 """)
 React.createElement(Person, null)
@@ -549,7 +549,7 @@ multiline spread attribute
   x } a={b} {... x } b="c" {...z }>
 </Component>
 ##expected
-React.createElement(Component, Object.assign({}, 
+React.createElement(Component, Object.assign({},
   x , {"a": (b)},  x , {"b": "c"}, z )
 )
 ##end
@@ -563,8 +563,8 @@ complex multiline spread attribute
   <div code={someFunc({a:{b:{}, C:'}'}})} />
 </Component>
 ##expected
-React.createElement(Component, Object.assign({}, 
-  y, {"a": (b)},  x , {"b": "c"}, z ), 
+React.createElement(Component, Object.assign({},
+  y, {"a": (b)},  x , {"b": "c"}, z ),
   React.createElement(React.DOM.div, {"code": (someFunc({a:{b:{}, C:'}'}}))})
 )
 ##end
@@ -586,7 +586,7 @@ coffeescript @ syntax in tag name
   <component />
 </@component>
 ##expected
-React.createElement(@component, null, 
+React.createElement(@component, null,
   React.createElement(component, null)
 )
 ##end
