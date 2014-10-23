@@ -4,32 +4,44 @@ var hex = '0123456789abcdef'.split('');
 module.exports  =  function stringEncode(input, opts) {
   opts = opts || {};
   var escaped = "";
-  
+
   for (var i = 0; i < input.length; i++) {
-    escaped = escaped + encodeChar(input.charAt(i), opts.preserveNewlines);
+    translation = encodeChar(input.charAt(i), opts);
+    escaped = escaped + translation
   }
   
   return escaped;
 }
 
-function encodeChar(inputChar, preserveNewlines) {
+function encodeChar(inputChar, opts) {
   var character = inputChar.charAt(0);
   var characterCode = inputChar.charCodeAt(0);
 
   switch(character) {
     case '\n':
-      if (!preserveNewlines) return "\\n";
-      else return character;
+      if (opts.singleQuotes) return character;
+      if (!opts.preserveNewlines) return "\\n";
+      return character;
     case '\r':
-      if (!preserveNewlines) return "\\r";
-      else return character;
+      if (opts.singleQuotes) return character;
+      if (!opts.preserveNewlines) return "\\r";
+      return character;
     case '\'': return "\\'";
-    case '"': return "\\\"";
-    case '\&': return "\\&";
+    case '"':
+      if (opts.singleQuotes) return character;
+      return "\\\"";
+    case '\&':
+      return "\\&";
     case '\\': return "\\\\";
-    case '\t': return "\\t";
-    case '\b': return "\\b";
-    case '\f': return "\\f";
+    case '\t':
+      if (opts.singleQuotes) return character;
+      return "\\t";
+    case '\b':
+      if (opts.singleQuotes) return character;
+      return "\\b";
+    case '\f':
+      if (opts.singleQuotes) return character;
+      return "\\f";
     case '/': return "\\x2F";
     case '<': return "\\x3C";
     case '>': return "\\x3E";

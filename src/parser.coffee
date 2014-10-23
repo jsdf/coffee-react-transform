@@ -169,30 +169,30 @@ module.exports = class Parser
     if attrName
       if doubleQuotedVal? # "value"
         @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
-          ParseTreeLeafNode($.CJSX_ATTR_VAL, "\"#{doubleQuotedVal}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "'#{attrName}'")
+          ParseTreeLeafNode($.CJSX_ATTR_VAL, "'#{doubleQuotedVal}'")
         ])
         return input.length
       else if singleQuotedVal? # 'value'
         @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "'#{attrName}'")
           ParseTreeLeafNode($.CJSX_ATTR_VAL, "'#{singleQuotedVal}'")
         ])
         return input.length
       else if cjsxEscVal # {value}
         @pushActiveBranchNode ParseTreeBranchNode $.CJSX_ATTR_PAIR
-        @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+        @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_ATTR_KEY, "'#{attrName}'")
         # on next iteration of parse loop, '{' will trigger CJSX_ESC state
         return input.indexOf('{') # consume up to start of cjsx escape
       else if bareVal # value
         @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "'#{attrName}'")
           ParseTreeLeafNode($.CJSX_ATTR_VAL, bareVal)
         ])
         return input.length
       else # valueless attr
         @addLeafNodeToActiveBranch ParseTreeBranchNode($.CJSX_ATTR_PAIR, null, [
-          ParseTreeLeafNode($.CJSX_ATTR_KEY, "\"#{attrName}\"")
+          ParseTreeLeafNode($.CJSX_ATTR_KEY, "'#{attrName}'")
           ParseTreeLeafNode($.CJSX_ATTR_VAL, 'true')
         ])
         return input.length
