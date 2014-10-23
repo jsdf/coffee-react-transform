@@ -205,7 +205,7 @@ nodeSerialisers =
       else
         # decode html entities to chars
         # escape string special chars
-        '"'+stringEscape(entityDecode(text))+'"'
+        '\''+stringEscape(entityDecode(text), singleQuotes: true)+'\''
 
   CJSX_ATTR_KEY: genericLeafSerialiser
   CJSX_ATTR_VAL: genericLeafSerialiser
