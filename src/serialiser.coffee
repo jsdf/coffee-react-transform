@@ -136,10 +136,12 @@ nodeSerialisers =
       accumulatedWhitespace = ''
 
     if HTML_ELEMENTS[node.value]?
-      prefix = @domObject+'.'
+      prefix = '"'
+      postfix = '"'
     else
       prefix = ''
-    "#{@reactObject}.createElement(#{prefix}#{node.value}, #{joinList(serialisedChildren)})"
+      postfix = ''
+    "#{@reactObject}.createElement(#{prefix}#{node.value}#{postfix}, #{joinList(serialisedChildren)})"
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children
