@@ -22,7 +22,7 @@ class Serialiser
       @domObject = 'React.DOM'
 
     domObjectParts = @domObject.split('.')
-    if domObjectParts.length > 1
+    if domObjectParts.length > 0 and domObjectParts[0] isnt ''
       @reactObject = domObjectParts[0]
     else
       @reactObject = 'React'
@@ -136,12 +136,10 @@ nodeSerialisers =
       accumulatedWhitespace = ''
 
     if HTML_ELEMENTS[node.value]?
-      prefix = '"'
-      postfix = '"'
+      element = '"'+node.value+'"'
     else
-      prefix = ''
-      postfix = ''
-    "#{@reactObject}.createElement(#{prefix}#{node.value}#{postfix}, #{joinList(serialisedChildren)})"
+      element = node.value
+    "#{@reactObject}.createElement(#{element}, #{joinList(serialisedChildren)})"
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children
