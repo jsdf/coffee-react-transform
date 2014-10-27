@@ -40,9 +40,6 @@ Car = React.createClass
 If you want the older style JSX output (which just desugars into function calls)
 then you need to use the 0.x branch, eg. `0.5.1`.
 
-### Try it out
-The [try coffee-react](http://jsdf.github.io/coffee-react-transform/) tool is available to test out some CJSX code and see the CoffeeScript it transforms into.
-
 ### Getting Started
 `coffee-react-transform` simply handles preprocessing Coffeescript with JSX-style markup into valid Coffeescript. Instead of using it directly, you may want to make use of one of these more high-level tools:
 - [coffee-react](https://github.com/jsdf/coffee-react): a drop-in replacement for the `coffee` executable, for compiling CJSX.
@@ -56,6 +53,11 @@ The [try coffee-react](http://jsdf.github.io/coffee-react-transform/) tool is av
 - [mimosa plugin](https://github.com/mtscout6/mimosa-cjsx) for the mimosa build tool
 - [karma preprocessor](https://github.com/mtscout6/karma-cjsx-preprocessor) for karma test runner
 - [broccoli plugin](https://github.com/ghempton/broccoli-cjsx) for the broccoli build tool
+
+#### Version compatibility
+2.x: React 0.12
+1.x: React 0.11.2
+0.x: React 0.11 and below
 
 ### CLI
 
