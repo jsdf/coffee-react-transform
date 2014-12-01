@@ -35,10 +35,6 @@ Car = React.createClass
       React.createElement(React.DOM.p, {"className": "seat"}, "Which seat can I take? ", (@props?.seat or 'none'))
     )
 ```
-**Note:** this example shows the output of the 1.x branch, which supports the
-[new factoryless creation of descriptors using `React.createElement`](https://gist.github.com/sebmarkbage/ae327f2eda03bf165261).
-If you want the older style JSX output (which just desugars into function calls)
-then you need to use the 0.x branch, eg. `0.5.1`.
 
 ### Getting Started
 `coffee-react-transform` simply handles preprocessing Coffeescript with JSX-style markup into valid Coffeescript. Instead of using it directly, you may want to make use of one of these more high-level tools:
@@ -55,9 +51,9 @@ then you need to use the 0.x branch, eg. `0.5.1`.
 - [broccoli plugin](https://github.com/ghempton/broccoli-cjsx) for the broccoli build tool
 
 #### Version compatibility
-2.x: React 0.12
-1.x: React 0.11.2
-0.x: React 0.11 and below
+- 2.x - React 0.12
+- 1.x - React 0.11.2
+- 0.x - React 0.11 and below
 
 ### CLI
 
