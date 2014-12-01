@@ -44,7 +44,7 @@ then you need to use the 0.x branch, eg. `0.5.1`.
 `coffee-react-transform` simply handles preprocessing Coffeescript with JSX-style markup into valid Coffeescript. Instead of using it directly, you may want to make use of one of these more high-level tools:
 - [coffee-react](https://github.com/jsdf/coffee-react): a drop-in replacement for the `coffee` executable, for compiling CJSX.
 - [node-cjsx](https://github.com/SimonDegraeve/node-cjsx): `require` CJSX files on the server (also possible with [coffee-react/register](https://github.com/jsdf/coffee-react)).
-- [coffee-reactify](https://github.com/jsdf/coffee-reactify): bundle CJSX files via [browserify](https://github.com/substack/node-browserify), see also [cjsxify](https://github.com/SimonDegraeve/cjsxify).  
+- [coffee-reactify](https://github.com/jsdf/coffee-reactify): bundle CJSX files via [browserify](https://github.com/substack/node-browserify), see also [cjsxify](https://github.com/SimonDegraeve/cjsxify).
 - [react-coffee-quickstart](https://github.com/SimonDegraeve/react-coffee-quickstart): equivalent to [react-quickstart](https://github.com/andreypopp/react-quickstart).
 - [sprockets preprocessor](https://github.com/jsdf/sprockets-coffee-react): use CJSX with Rails/Sprockets
 - [ruby coffee-react gem](https://github.com/jsdf/ruby-coffee-react) for general ruby integration
@@ -104,10 +104,8 @@ extraProps = color: 'red', speed: 'fast'
 which is transformed to:
 ```coffee
 extraProps = color: 'red', speed: 'fast'
-React.createElement(React.DOM.div, Object.assign({"color": "blue"},  extraProps)
+React.createElement(React.DOM.div, React.__spread({"color": "blue"},  extraProps)
 ```
-If you use this syntax in your code, be sure to include a shim for `Object.assign` for browsers/environments which don't yet support it (basically none do so far).
-[es6-shim](https://github.com/es-shims/es6-shim) and [object.assign](https://www.npmjs.org/package/object.assign) are two possible choices.
 
 ### Breaking Changes in 1.0
 

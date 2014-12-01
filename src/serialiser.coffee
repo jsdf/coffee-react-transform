@@ -62,7 +62,7 @@ class Serialiser
 
       flushPairs()
 
-    "Object.assign(#{joinList(assigns)})"
+    "React.__spread(#{joinList(assigns)})"
 
   serialiseAttributePairs: (children) ->
     # whitespace (particularly newlines) must be maintained
