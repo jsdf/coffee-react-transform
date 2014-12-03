@@ -50,11 +50,6 @@ Car = React.createClass
 - [karma preprocessor](https://github.com/mtscout6/karma-cjsx-preprocessor) for karma test runner
 - [broccoli plugin](https://github.com/ghempton/broccoli-cjsx) for the broccoli build tool
 
-#### Version compatibility
-- 2.x - React 0.12
-- 1.x - React 0.11.2
-- 0.x - React 0.11 and below
-
 ### CLI
 
 ```bash
@@ -77,6 +72,12 @@ From [npm](https://www.npmjs.org/):
 ```bash
 npm install -g coffee-react-transform
 ```
+
+#### Version compatibility
+- 2.1.x - React 0.12.1
+- 2.x - React 0.12
+- 1.x - React 0.11.2
+- 0.x - React 0.11 and below
 
 #### UMD bundle for the browser
 If you want to use coffee-react-transform in the browser or under ExecJS or some other environment that doesn't support CommonJS modules, you can use this build provided by [BrowserifyCDN](wzrd.in), which will work as an AMD module or just a plain old script tag:
