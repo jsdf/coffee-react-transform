@@ -2,24 +2,27 @@
   "name": "gh-pages-coffee-react",
   "version": "0.0.0",
   "description": "",
-  "main": "try-cr.coffee",
+  "main": "./src/try-cr.coffee",
+  "style": "./src/style.less",
+  "transforms": [
+    "less-css-stream"
+  ],
   "dependencies": {
-    "browserify-incremental": "~0.0.1",
     "code-mirror": "~3.22.0",
-    "coffee-react": "~0.4.0",
-    "react": "~0.10.0",
+    "coffee-react": "^2.1.2",
+    "react": "^0.12.2",
     "envify": "~1.2.1",
-    "coffee-reactify": "^0.4.0",
+    "coffee-reactify": "^2.1.0",
     "chokidar": "^0.8.2",
-    "glob": "^4.0.4",
-    "less": "^1.7.3",
     "through": "^2.3.4",
-    "async": "^0.9.0"
+    "async": "^0.9.0",
+    "browserify-assets": "^1.2.1",
+    "less-css-stream": "^0.1.2"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./build-pages.sh"
+    "build": "./build-pages.js"
   },
   "repository": {
     "type": "git",

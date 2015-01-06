@@ -1,51 +1,33 @@
 #!/usr/bin/env node
 var fs = require('fs')
-var browserify = require('browserify-incremental')
+var browserifyAssets = require('browserify-assets')
 var chokidar = require('chokidar')
-var less = require('less')
-var through = require('through')
 
-var bundler, watcher
 
-var stylePath = './src/style.less'
-var codePath = './src/try-cr'
-
-function log() { console.log.apply(console, arguments) }
 function build() {
-  log('bundling...')
-  console.time('js bundled')
-  console.time('css bundled')
-  bundler.bundle()
-    .pipe(fs.createWriteStream('./bundles/bundle.js'))
-    .on('close', function() { console.timeEnd('js bundled') })
-  buildStyles(stylePath)
-    .pipe(fs.createWriteStream('./bundles/bundle.css'))
-    .on('close', function() { console.timeEnd('css bundled') })
-}
-
-function buildStyles(lessFile) {
-  var outstream = through()
-  fs.readFile(lessFile, {encoding: 'utf8'}, function(err, lessCss) {
-    if (err) return console.error(err)
-    less.render(lessCss, function (err, css) {
-      if (err) return console.error(err)
-      outstream.end(css)
-    })
+  var b = browserifyAssets({
+    extensions: [".coffee"],
+    cacheFile: './browserify-cache.json',
   })
-  return outstream
+    .transform(require('coffee-reactify'))
+    .add(require.resolve('./'))
+    .on('log', function(msg){ console.log(msg) })
+    .on('allBundlesComplete', function(msg){ console.log('finished') })
+    .on('assetStream', function(assetStream) {
+      assetStream
+        .on('error', function (err) { console.error(err) })
+        .pipe(fs.createWriteStream('./bundles/bundle.css'))
+    })
+    .bundle()
+      .on('error', function (err) { console.error(err) })
+      .pipe(fs.createWriteStream('./bundles/bundle.js'))
 }
 
-bundler = browserify({
-  extensions: [".coffee"],
-  cacheFile: './browserify-cache.json',
-})
-  .transform('coffee-reactify')
-  .add(codePath)
-
-watcher = chokidar.watch('./src/', {ignored: /[\/\\]\./, persistent: true})
+var watcher = chokidar.watch('./src/', {ignored: /[\/\\]\./, persistent: true})
   .on('change', function (change) {
-    log('changed '+change)
+    console.log('changed '+change)
     build()
   })
 
-log('watching...')
+console.log('watching')
+build()
