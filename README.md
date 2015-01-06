@@ -7,7 +7,6 @@ Provides support for an equivalent of JSX syntax in Coffeescript (called CJSX) s
 car-component.coffee
 
 ```coffee
-# @cjsx React.DOM
 Car = React.createClass
   render: ->
     <Vehicle doors={4} locked={isLocked()} data-colour="red" on>
@@ -26,13 +25,12 @@ cjsx-transform car-component.coffee
 output
 
 ```coffee
-
 Car = React.createClass
   render: ->
     React.createElement(Vehicle, {"doors": (4), "locked": (isLocked()), "data-colour": "red", "on": true},
       React.createElement(Parts.FrontSeat, null),
       React.createElement(Parts.BackSeat, null),
-      React.createElement(React.DOM.p, {"className": "seat"}, "Which seat can I take? ", (@props?.seat or 'none'))
+      React.createElement("p", {"className": "seat"}, "Which seat can I take? ", (@props?.seat or 'none'))
     )
 ```
 
@@ -88,7 +86,7 @@ If you want to use coffee-react-transform in the browser or under ExecJS or some
 <script src="http://wzrd.in/standalone/coffee-react-transform"></script>
 <script>
   coffeeReactTransform('-> <a />');
-  // returns "-> React.createElement(React.DOM.a, null)"
+  // returns '-> React.createElement("a", null)'
 </script>
 ```
 
@@ -101,7 +99,7 @@ extraProps = color: 'red', speed: 'fast'
 which is transformed to:
 ```coffee
 extraProps = color: 'red', speed: 'fast'
-React.createElement(React.DOM.div, React.__spread({"color": "blue"},  extraProps)
+React.createElement("div", React.__spread({"color": "blue"},  extraProps)
 ```
 
 ### Breaking Changes in 1.0
