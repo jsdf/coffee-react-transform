@@ -12,7 +12,7 @@
     "coffee-react": "^2.1.2",
     "react": "^0.12.2",
     "envify": "~1.2.1",
-    "coffee-reactify": "^2.1.0",
+    "coffee-reactify": "2.2.0",
     "chokidar": "^0.8.2",
     "through": "^2.3.4",
     "async": "^0.9.0",
