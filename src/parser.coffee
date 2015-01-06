@@ -297,10 +297,6 @@ module.exports = class Parser
   clean: (code) ->
     code = code.slice(1) if code.charCodeAt(0) is BOM
     code = code.replace(/\r/g, '') # strip carriage return chars
-    # code = code.replace TRAILING_SPACES, ''
-    # if WHITESPACE.test code
-    #   code = "\n#{code}"
-    #   @chunkLine--
     code
 
   # Returns the line and column number from an offset into the current chunk.

@@ -3,7 +3,7 @@
 
 $ = require './symbols'
 
-HTML_ELEMENTS = require('./htmlelements')
+HTML_ELEMENTS = require './htmlelements'
 
 stringEscape = require './stringescape'
 
