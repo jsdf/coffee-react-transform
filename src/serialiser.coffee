@@ -3,8 +3,6 @@
 
 $ = require './symbols'
 
-HTML_ELEMENTS = require './htmlelements'
-
 stringEscape = require './stringescape'
 
 entityDecode = require './entitydecode'
@@ -113,6 +111,8 @@ genericBranchSerialiser = (node) ->
 
 genericLeafSerialiser = (node) -> node.value
 
+tagConvention = /^[a-z]|\-/
+
 nodeSerialisers =
   ROOT: genericBranchSerialiser
 
@@ -135,7 +135,9 @@ nodeSerialisers =
       serialisedChildren[serialisedChildren.length-1] += accumulatedWhitespace
       accumulatedWhitespace = ''
 
-    if HTML_ELEMENTS[node.value]?
+    # from react-tools/vendor/fbtransform/transforms/react.js
+    # Identifiers with lower case or hypthens are fallback tags (strings).
+    if tagConvention.test(node.value)
       element = '"'+node.value+'"'
     else
       element = node.value

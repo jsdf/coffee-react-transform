@@ -12,7 +12,7 @@ unless process.env.NODE_DISABLE_COLORS
 
 SOURCEFILES = ['transformer', 'parser', 'serialiser', 'symbols', 'helpers']
 TESTFILES = ['test.coffee','output-testcases.txt','eval-testcases.txt']
-JSFILES = ['htmlelements.js', 'entitydecode.js', 'stringescape.js']
+JSFILES = ['entitydecode.js', 'stringescape.js']
 
 # Log a message with a color.
 log = (message, color, explanation) ->
