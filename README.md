@@ -39,7 +39,9 @@ Car = React.createClass
 - [coffee-react](https://github.com/jsdf/coffee-react): a drop-in replacement for the `coffee` executable, for compiling CJSX.
 - [node-cjsx](https://github.com/SimonDegraeve/node-cjsx): `require` CJSX files on the server (also possible with [coffee-react/register](https://github.com/jsdf/coffee-react)).
 - [coffee-reactify](https://github.com/jsdf/coffee-reactify): bundle CJSX files via [browserify](https://github.com/substack/node-browserify), see also [cjsxify](https://github.com/SimonDegraeve/cjsxify).
+- [cjsx-loader](https://github.com/KyleAMathews/cjsx-loader)
 - [react-coffee-quickstart](https://github.com/SimonDegraeve/react-coffee-quickstart): equivalent to [react-quickstart](https://github.com/andreypopp/react-quickstart).
+- [coffee-react-quickstart](https://github.com/KyleAMathews/coffee-react-quickstart)
 - [sprockets preprocessor](https://github.com/jsdf/sprockets-coffee-react): use CJSX with Rails/Sprockets
 - [ruby coffee-react gem](https://github.com/jsdf/ruby-coffee-react) for general ruby integration
 - [vim plugin](https://github.com/mtscout6/vim-cjsx) for syntax highlighting
