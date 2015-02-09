@@ -555,6 +555,25 @@ React.createElement(Component, React.__spread({},
 ##end
 
 ##desc
+multiline tag with spread attribute
+##input
+<Component
+  z="1"
+  {...x}
+  a={b}
+  b="c"
+>
+</Component>
+##expected
+React.createElement(Component, React.__spread({ \
+  "z": "1"
+  }, x, { \
+  "a": (b),  \
+  "b": "c"
+})
+)
+##end
+##desc
 complex multiline spread attribute
 ##input
 <Component

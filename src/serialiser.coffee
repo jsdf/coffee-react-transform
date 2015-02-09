@@ -60,7 +60,7 @@ class Serialiser
       else
         pairAttrsBuffer.push(child)
 
-      flushPairs()
+    flushPairs()
 
     "React.__spread(#{joinList(assigns)})"
 
