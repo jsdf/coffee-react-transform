@@ -538,18 +538,17 @@ complex spread attribute
 ##input
 <Component {...x} a={b} {... x } b="c" {...$my_xtraCoolVar123 } />
 ##expected
-React.createElement(Component, React.__spread({}, x, {"a": (b)},  x , {"b": "c"}, $my_xtraCoolVar123 ))
+React.createElement(Component, React.__spread({},  x, {"a": (b)},  x , {"b": "c"}, $my_xtraCoolVar123  ))
 ##end
 
 ##desc
 multiline spread attribute
 ##input
-<Component
- {...
+<Component {...
   x } a={b} {... x } b="c" {...z }>
 </Component>
 ##expected
-React.createElement(Component, React.__spread({},
+React.createElement(Component, React.__spread({},  
   x , {"a": (b)},  x , {"b": "c"}, z )
 )
 ##end
@@ -574,15 +573,38 @@ React.createElement(Component, React.__spread({ \
 )
 ##end
 ##desc
+multiline tag with spread attribute first
+##input
+<Component
+  {...
+  x}
+  z="1"
+  a={b}
+  b="c"
+>
+</Component>
+##expected
+React.createElement(Component, React.__spread({}, \
+  
+  x, { \
+  "z": "1",  \
+  "a": (b),  \
+  "b": "c"
+})
+)
+##end
+
+##desc
 complex multiline spread attribute
 ##input
 <Component
- {...
+  {...
   y} a={b} {... x } b="c" {...z }>
   <div code={someFunc({a:{b:{}, C:'}'}})} />
 </Component>
 ##expected
-React.createElement(Component, React.__spread({},
+React.createElement(Component, React.__spread({}, \
+  
   y, {"a": (b)},  x , {"b": "c"}, z ),
   React.createElement("div", {"code": (someFunc({a:{b:{}, C:'}'}}))})
 )

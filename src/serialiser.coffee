@@ -47,7 +47,10 @@ class Serialiser
     flushPairs = =>
       if pairAttrsBuffer.length
         serialisedChild = @serialiseAttributePairs(pairAttrsBuffer)
-        assigns.push(serialisedChild) if serialisedChild # skip null
+        if serialisedChild
+          assigns.push(serialisedChild)
+        else
+          assigns.push(type: $.CJSX_WHITESPACE, value: pairAttrsBuffer.map(@serialiseNode.bind(this)).join('').replace('\n', '\\\n'))
         pairAttrsBuffer = [] # reset buffer
 
     if firstNonWhitespaceChild(children)?.type is $.CJSX_ATTR_SPREAD
@@ -62,7 +65,20 @@ class Serialiser
 
     flushPairs()
 
-    "React.__spread(#{joinList(assigns)})"
+    accumulatedWhitespace = ''
+    assignsWithWhitespace = []
+    for assignItem, assignIndex in assigns
+      if typeof assignItem is 'object' and assignItem?.type is $.CJSX_WHITESPACE
+        accumulatedWhitespace += assignItem.value
+      if typeof assignItem is 'string'
+        assignsWithWhitespace.push accumulatedWhitespace+assignItem
+        accumulatedWhitespace = ''
+
+    if assignsWithWhitespace.length
+      lastAssignWithWhitespace = assignsWithWhitespace.pop()
+      assignsWithWhitespace.push lastAssignWithWhitespace+accumulatedWhitespace
+
+    "React.__spread(#{joinList(assignsWithWhitespace)})"
 
   serialiseAttributePairs: (children) ->
     # whitespace (particularly newlines) must be maintained

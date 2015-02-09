@@ -37,6 +37,8 @@ tryCompile = (input, desc) ->
     e.message = """
     compile error in testcase: #{desc}
 
+    #{input}
+
     #{e.stack}
 
     """
