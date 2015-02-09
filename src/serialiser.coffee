@@ -116,7 +116,7 @@ genericLeafSerialiser = (node) -> node.value
 nodeSerialisers =
   ROOT: genericBranchSerialiser
 
-  CJSX_PRAGMA: -> null
+  CJSX_PRAGMA: -> "`/** @jsx #{@domObject} */`"
 
   CJSX_EL: (node) ->
     serialisedChildren = []
