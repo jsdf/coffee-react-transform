@@ -1,5 +1,8 @@
 {inspect} = require 'util'
 Parser = require '../src/parser'
 
-module.exports.printTree = (code) ->
-  console.log inspect new Parser().parse(code), showHidden: true, depth: null
+exports.printTree = (code) ->
+  exports.inspect new Parser().parse(code)
+
+exports.inspect = (obj) ->
+  console.log inspect obj, showHidden: true, depth: null
