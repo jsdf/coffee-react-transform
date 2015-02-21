@@ -631,3 +631,18 @@ React.createElement(@component, null,
   React.createElement(component, null)
 )
 ##end
+
+##desc
+Support comments in the middle of a multiline function call args list.
+
+Coffeescript drops these comments so I’m assuming we should to.
+##input
+<foo>
+  <bar />
+  # <baz /> leaving baz unimplemented
+</foo>
+##expected
+React.createElement(foo, null,
+  React.createElement(bar, null)
+)
+##end
