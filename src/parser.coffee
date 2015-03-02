@@ -31,6 +31,7 @@ module.exports = class Parser
         ) or
         @cjsxStart() or
         @cjsxAttribute() or
+        @cjsxComment() or
         @cjsxEscape() or
         @cjsxUnescape() or
         @cjsxEnd() or
@@ -206,6 +207,13 @@ module.exports = class Parser
       throwSyntaxError \
         "Invalid attribute #{input} in CJSX tag #{@peekActiveState(2).value}",
         first_line: @chunkLine, first_column: @chunkColumn
+
+  cjsxComment: ->
+    match = @chunk.match(/^\{#(.*)\}/)
+
+    return 0 unless match
+    @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_COMMENT, match[1])
+    return match[0].length
 
   cjsxEscape: ->
     return 0 unless @chunk.charAt(0) is '{' and
