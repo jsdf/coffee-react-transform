@@ -372,20 +372,20 @@ heregex
 ##input
 test = /432/gm # this is a regex
 6 /432/gm # this is division
-<tag>
-{test = /<tag>/} <--this is a regex containing something which looks like a tag
-</tag>
+<Tag>
+{test = /<Tag>/} <--this is a regex containing something which looks like a tag
+</Tag>
 <Person />
 REGEX = /// ^
   (/ (?! [\s=] )   # comment comment <comment>comment</comment>
   [^ [ / \n \\ ]*  # comment comment
   (?:
-    <tag />
+    <Tag />
     (?: \\[\s\S]   # comment comment
       | \[         # comment comment
            [^ \] \n \\ ]*
            (?: \\[\s\S] [^ \] \n \\ ]* )*
-           <tag>tag</tag>
+           <Tag>tag</Tag>
          ]
     ) [^ [ / \n \\ ]*
   )*
@@ -395,20 +395,20 @@ REGEX = /// ^
 ##expected
 test = /432/gm # this is a regex
 6 /432/gm # this is division
-React.createElement(tag, null,
-(test = /<tag>/), """ \x3C--this is a regex containing something which looks like a tag
+React.createElement(Tag, null,
+(test = /<Tag>/), """ \x3C--this is a regex containing something which looks like a tag
 """)
 React.createElement(Person, null)
 REGEX = /// ^
   (/ (?! [\s=] )   # comment comment <comment>comment</comment>
   [^ [ / \n \\ ]*  # comment comment
   (?:
-    <tag />
+    <Tag />
     (?: \\[\s\S]   # comment comment
       | \[         # comment comment
            [^ \] \n \\ ]*
            (?: \\[\s\S] [^ \] \n \\ ]* )*
-           <tag>tag</tag>
+           <Tag>tag</Tag>
          ]
     ) [^ [ / \n \\ ]*
   )*
@@ -623,11 +623,11 @@ React.createElement(Component, {"val": ""})
 ##desc
 coffeescript @ syntax in tag name
 ##input
-<@component>
-  <component />
-</@component>
+<@Component>
+  <Component />
+</@Component>
 ##expected
-React.createElement(@component, null,
-  React.createElement(component, null)
+React.createElement(@Component, null,
+  React.createElement(Component, null)
 )
 ##end
