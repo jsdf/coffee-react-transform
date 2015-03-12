@@ -26,6 +26,7 @@ module.exports =
   # they're just names for use in debugging
   CJSX_START: 'CJSX_START'
   CJSX_END: 'CJSX_END'
+  CJSX_COMMENT: 'CJSX_COMMENT'
   CJSX_ESC_START: 'CJSX_ESC_START'
   CJSX_ESC_END: 'CJSX_ESC_END'
   CJSX_PRAGMA: 'CJSX_PRAGMA'
