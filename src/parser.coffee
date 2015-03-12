@@ -360,7 +360,7 @@ module.exports = class Parser
       else if end is '"' and prev is '#' and letter is '{'
         stack.push end = '}'
       prev = letter
-    @error "missing #{ stack.pop() }, starting"
+    throwSyntaxError "missing #{ stack.pop() }, starting"
 
 
 # JSX tag matching regexes
