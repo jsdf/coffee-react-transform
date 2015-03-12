@@ -478,6 +478,52 @@ React.createElement(Person, null, """
 ##end
 
 ##desc
+empty node is handled as expected
+##input
+<Person>
+</Person>
+##expected
+React.createElement(Person, null
+)
+##end
+
+##desc
+cs comment at start of cjsx escape
+##input
+<Person>
+{# i am a comment
+  "i am a string"
+}
+</Person>
+##expected
+React.createElement(Person, null,
+(# i am a comment
+  "i am a string"
+)
+)
+##end
+
+##desc
+cjsx comment is passed through
+##input
+<Person>
+{# i am a comment}
+</Person>
+##expected
+React.createElement(Person, null,
+
+)
+##end
+
+##desc
+comment syntax can be used inline
+##input
+<Person>{#comment inline}</Person>
+##expected
+React.createElement(Person, null, )
+##end
+
+##desc
 string within cjsx is ignored by parser and escaped
 ##input
 <Person> "i am not a string" 'nor am i' </Person>
