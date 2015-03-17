@@ -13,6 +13,7 @@ Car = React.createClass
       <Parts.FrontSeat />
       <Parts.BackSeat />
       <p className="seat">Which seat can I take? {@props?.seat or 'none'}</p>
+      {# also, this is a comment }
     </Vehicle>
 ```
 

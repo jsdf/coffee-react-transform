@@ -83,7 +83,6 @@ class Serialiser
     # to ensure line number parity
 
     # sort children into whitespace and semantic (non whitespace) groups
-    # this seems wrong :\
     [whitespaceChildren, semanticChildren] = children.reduce((partitionedChildren, child) ->
       if child.type is $.CJSX_WHITESPACE
         partitionedChildren[0].push child
@@ -141,7 +140,7 @@ nodeSerialisers =
     for child in node.children
       serialisedChild = @serialiseNode child
       if child? # filter empty text nodes
-        if WHITESPACE_ONLY.test serialisedChild
+        if serialisedChild.length is 0 or WHITESPACE_ONLY.test serialisedChild
           accumulatedWhitespace += serialisedChild
         else
           serialisedChildren.push(accumulatedWhitespace + serialisedChild)
@@ -160,7 +159,7 @@ nodeSerialisers =
     "#{@reactObject}.createElement(#{element}, #{joinList(serialisedChildren)})"
 
   CJSX_COMMENT: (node) ->
-    ""
+    'null'
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children

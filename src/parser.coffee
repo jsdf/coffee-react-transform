@@ -209,7 +209,7 @@ module.exports = class Parser
         first_line: @chunkLine, first_column: @chunkColumn
 
   cjsxComment: ->
-    match = @chunk.match(/^\{#(.*)\}/)
+    match = @chunk.match(CJSX_ESC_COMMENT)
 
     return 0 unless match
     @addLeafNodeToActiveBranch ParseTreeLeafNode($.CJSX_COMMENT, match[1])
@@ -422,6 +422,8 @@ TAG_ATTRIBUTES = ///
 ///
 
 PRAGMA = /^\s*#\s*@cjsx\s+(\S*)/i
+
+CJSX_ESC_COMMENT = /^\{#(.*)\}/
 
 # from coffeescript lexer
 
