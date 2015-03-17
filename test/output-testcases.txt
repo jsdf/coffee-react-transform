@@ -677,3 +677,12 @@ React.createElement(@Component, null,
   React.createElement(Component, null)
 )
 ##end
+
+
+##desc
+custom element
+##input
+<paper-button className="button">{text}</paper-button>
+##expected
+React.createElement("paper-button", {"className": "button"}, (text))
+##end
