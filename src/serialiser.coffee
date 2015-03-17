@@ -159,7 +159,7 @@ nodeSerialisers =
     "#{@reactObject}.createElement(#{element}, #{joinList(serialisedChildren)})"
 
   CJSX_COMMENT: (node) ->
-    'null'
+    ''
 
   CJSX_ESC: (node) ->
     childrenSerialised = node.children
