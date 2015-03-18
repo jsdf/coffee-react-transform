@@ -657,6 +657,62 @@ React.createElement(Component, React.__spread({}, \
 ##end
 
 ##desc
+self closing spread attribute on single line
+##input
+<Component a="b" c="d" {...@props} />
+##expected
+React.createElement(Component, React.__spread({"a": "b", "c": "d"}, @props ))
+##end
+
+##desc
+self closing spread attribute on new line
+##input
+<Component
+  a="b"
+  c="d"
+  {...@props}
+/>
+##expected
+React.createElement(Component, React.__spread({ \
+  "a": "b",  \
+  "c": "d"
+  }, @props
+))
+##end
+
+##desc
+self closing spread attribute on same line
+##input
+<Component
+  a="b"
+  c="d"
+  {...@props} />
+##expected
+React.createElement(Component, React.__spread({ \
+  "a": "b",  \
+  "c": "d"
+  }, @props ))
+##end
+
+##desc
+self closing spread attribute on next line
+##input
+<Component
+  a="b"
+  c="d"
+  {...@props}
+
+/>
+##expected
+React.createElement(Component, React.__spread({ \
+  "a": "b",  \
+  "c": "d"
+  }, @props
+
+))
+##end
+
+##desc
 Empty strings are not converted to true
 ##input
 <Component val='' />
