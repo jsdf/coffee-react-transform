@@ -60,7 +60,7 @@ testTypes =
       # simple assertion of string equality of expected output and actual output
       pass = transformed is testcase.expected
 
-      diff = unless pass
+      diff = if not pass or process.env.VERBOSE
         jsdiff.diffChars(testcase.expected, transformed).map((part) ->
           color = (if part.added then "green" else (if part.removed then "red" else "grey"))
           text = part.value
@@ -69,24 +69,33 @@ testTypes =
           text[color]
         ).join('')
 
-      console.assert pass,
-      """
+      message = 
+        """
 
-      #{testcase.desc}
+        #{testcase.desc}
 
-      --- input ---
-      #{testcase.input}
+        --- input ---
+        #{testcase.input}
 
-      --- Expected output ---
-      #{testcase.expected}
+        --- Expected output ---
+        #{testcase.expected}
 
-      --- Actual output ---
-      #{transformed}
+        --- Actual output ---
+        #{transformed}
 
-      --- Diff ---
-      #{diff}
+        --- Diff ---
+        #{diff}
 
-      """
+        """
+
+      console.assert pass, message
+
+      if process.env.VERBOSE
+        console.log message+"""
+
+        --- Compiled output ---
+        #{compiled}
+        """
 
 generateTestcasesParser = (params) ->
   testcaseMatcher = do ->

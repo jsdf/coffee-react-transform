@@ -56,13 +56,13 @@ task 'test', 'run tests', -> build test
 task 'watch', 'watch and build', ->
   SOURCEFILES.forEach (sourcefile) ->
     fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, ->
-      build ->
+      run 'npm', ['run', 'prepublish'], ->
         log 'rebuild complete', bold
   log "watching..." , green
 
 task 'watch:test', 'watch and run tests', ->
   TESTFILES.forEach (testfile) ->
-    fs.watchFile "test/#{testfile}", interval: 1000, -> build -> setTimeout(test, 200)
+    fs.watchFile "test/#{testfile}", interval: 1000, -> run 'npm', ['test']
   SOURCEFILES.forEach (sourcefile) ->
-    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, -> build -> setTimeout(test, 200)
+    fs.watchFile "src/#{sourcefile}.coffee", interval: 1000, -> run 'npm', ['test']
   log "watching..." , green
