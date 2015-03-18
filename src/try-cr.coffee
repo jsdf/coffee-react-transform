@@ -60,4 +60,4 @@ TryCR = React.createClass
       {@renderShareLink()}
     </div>
 
-React.renderComponent(<TryCR />, document.getElementById('try-cr'))
+React.render(<TryCR />, document.getElementById('try-cr'))

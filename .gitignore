@@ -38,3 +38,5 @@ node_modules
 bower_components
 
 browserify-cache.json
+
+lib/
