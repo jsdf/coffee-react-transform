@@ -16,9 +16,8 @@ if process.env.DEBUG
 else
   transform = require '../'
 
-tryTransform = (input, desc) ->
+tryTransform = (input, options, desc) ->
   try
-    options = literate: desc.match /literate/
     transformed = transform input, options
   catch e
     e.message = """
@@ -31,9 +30,8 @@ tryTransform = (input, desc) ->
 
   transformed
 
-tryCompile = (input, desc) ->
+tryCompile = (input, options, desc) ->
   try
-    options = literate: desc.match /literate/
     compiled = coffeeCompile input, options
   catch e
     e.message = """
@@ -55,9 +53,11 @@ testTypes =
   'output':
     params: ['desc','input','expected']
     runner: (testcase) ->
-      transformed = tryTransform testcase.input, testcase.desc
+      options = literate: testcase.desc.match /literate/
 
-      compiled = tryCompile transformed, testcase.desc
+      transformed = tryTransform testcase.input, options, testcase.desc
+
+      compiled = tryCompile transformed, options, testcase.desc
 
       # simple assertion of string equality of expected output and actual output
       pass = transformed is testcase.expected
