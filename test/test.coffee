@@ -18,7 +18,8 @@ else
 
 tryTransform = (input, desc) ->
   try
-    transformed = transform input
+    options = literate: desc.match /literate/
+    transformed = transform input, options
   catch e
     e.message = """
     transform error in testcase: #{desc}
@@ -32,7 +33,8 @@ tryTransform = (input, desc) ->
 
 tryCompile = (input, desc) ->
   try
-    compiled = coffeeCompile input
+    options = literate: desc.match /literate/
+    compiled = coffeeCompile input, options
   catch e
     e.message = """
     compile error in testcase: #{desc}
