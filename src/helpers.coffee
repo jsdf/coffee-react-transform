@@ -136,3 +136,14 @@ exports.nameWhitespaceCharacter = (string) ->
     when '\r' then 'carriage return'
     when '\t' then 'tab'
     else string
+
+exports.invertLiterate = (code) ->
+  maybe_code = true
+  lines = for line in code.split('\n')
+    if maybe_code and /^([ ]{4}|[ ]{0,3}\t)/.test line
+      line
+    else if maybe_code = /^\s*$/.test line
+      line
+    else
+      '# ' + line
+  lines.join '\n'
