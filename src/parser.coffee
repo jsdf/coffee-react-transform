@@ -1,6 +1,6 @@
 
 # Import the helpers we need.
-{count, starts, compact, last, repeat, throwSyntaxError} = require './helpers'
+{count, starts, compact, last, repeat, throwSyntaxError, invertLiterate} = require './helpers'
 
 $ = require './symbols'
 
@@ -305,6 +305,7 @@ module.exports = class Parser
   clean: (code) ->
     code = code.slice(1) if code.charCodeAt(0) is BOM
     code = code.replace(/\r/g, '') # strip carriage return chars
+    code = invertLiterate code if @opts?.literate
     code
 
   # Returns the line and column number from an offset into the current chunk.
