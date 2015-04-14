@@ -108,9 +108,12 @@ React.createElement("div", React.__spread({"color": "blue"},  extraProps)
 
 ### Tests
 
-`cake test` or `cake watch:test`
+`npm test` or `cake test` or `cake watch:test`
 
 ### Changelog
+
+#### 3.1.0
+- Fix literate CoffeeScript/CJSX with single apostrophes in Markdown ([benjie](https://github.com/benjie))
 
 #### 3.0.1
 - Fixed some bugs relating to self-closing tags with spread attributes
