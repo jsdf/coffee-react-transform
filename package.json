@@ -35,8 +35,8 @@
     "url": "git://github.com/jsdf/coffee-react-transform.git"
   },
   "devDependencies": {
-    "coffee-script": "^1.7.1",
-    "diff": "^1.0.8",
-    "colors": "^0.6.2"
+    "coffee-script": "^1.9.1",
+    "colors": "^0.6.2",
+    "diff": "^1.0.8"
   }
 }

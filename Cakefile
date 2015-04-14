@@ -38,9 +38,10 @@ compile = (srcFiles, srcDir, destDir, cb) ->
   coffee args, cb
 
 # Run CoffeeScript command
-coffee = (args, cb) -> run 'coffee', args, cb
+coffee = (args, cb) -> run './node_modules/.bin/coffee', args, cb
 
 run = (executable, args = [], cb) ->
+  console.log(executable, args...)
   proc =         spawn executable, args
   proc.stdout.on 'data', (buffer) -> log buffer.toString(), green
   proc.stderr.on 'data', (buffer) -> log buffer.toString(), red
