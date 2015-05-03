@@ -46,7 +46,7 @@ Car = React.createClass
 - [sprockets preprocessor](https://github.com/jsdf/sprockets-coffee-react): use CJSX with Rails/Sprockets
 - [ruby coffee-react gem](https://github.com/jsdf/ruby-coffee-react) for general ruby integration
 - [vim plugin](https://github.com/mtscout6/vim-cjsx) for syntax highlighting
-- [sublime text package](https://github.com/reactjs/sublime-react/) for syntax highlighting
+- [sublime text package](https://github.com/Guidebook/sublime-cjsx) for syntax highlighting
 - [mimosa plugin](https://github.com/mtscout6/mimosa-cjsx) for the mimosa build tool
 - [karma preprocessor](https://github.com/mtscout6/karma-cjsx-preprocessor) for karma test runner
 - [broccoli plugin](https://github.com/ghempton/broccoli-cjsx) for the broccoli build tool
