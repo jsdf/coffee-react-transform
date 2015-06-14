@@ -152,7 +152,7 @@ genericBranchSerialiser = (node) ->
 
 genericLeafSerialiser = (node) -> node.value
 
-tagConvention = /^[a-z]|\-/
+customTagConvention = /(^[A-Z@]|\.)/
 
 nodeSerialisers =
   ROOT: genericBranchSerialiser
@@ -176,12 +176,11 @@ nodeSerialisers =
       serialisedChildren[serialisedChildren.length-1] += accumulatedWhitespace
       accumulatedWhitespace = ''
 
-    # from react-tools/vendor/fbtransform/transforms/react.js
-    # Identifiers with lower case or hypthens are fallback tags (strings).
-    if tagConvention.test(node.value)
-      element = '"'+node.value+'"'
-    else
+    # Identifiers which start with upper case (or @) or contain dot are custom tags.
+    if customTagConvention.test(node.value)
       element = node.value
+    else
+      element = '"'+node.value+'"'
     "#{@reactObject}.createElement(#{element}, #{joinList(serialisedChildren)})"
 
   CJSX_COMMENT: (node) ->
