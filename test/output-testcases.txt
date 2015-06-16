@@ -564,6 +564,14 @@ React.createElement(Something.Tag, null)
 ##end
 
 ##desc
+tag with lowercase namespace
+##input
+<something.tag></something.tag>
+##expected
+React.createElement(something.tag, null)
+##end
+
+##desc
 self closing tag with namespace
 ##input
 <Something.Tag />
