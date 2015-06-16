@@ -152,7 +152,7 @@ genericBranchSerialiser = (node) ->
 
 genericLeafSerialiser = (node) -> node.value
 
-customTagConvention = /(^[A-Z@]|\.)/
+componentClassTagConvention = /(^[A-Z@]|\.)/
 
 nodeSerialisers =
   ROOT: genericBranchSerialiser
@@ -176,8 +176,10 @@ nodeSerialisers =
       serialisedChildren[serialisedChildren.length-1] += accumulatedWhitespace
       accumulatedWhitespace = ''
 
-    # Identifiers which start with upper case (or @) or contain dot are custom tags.
-    if customTagConvention.test(node.value)
+    # Identifiers which start with an upper case letter, @, or contain a dot 
+    # (property access) are component classes. Everything else is treated as a 
+    # DOM/custom element, and output as a name string.
+    if componentClassTagConvention.test(node.value)
       element = node.value
     else
       element = '"'+node.value+'"'
