@@ -12,17 +12,18 @@
     "browserify-assets": "^1.2.1",
     "chokidar": "^0.8.2",
     "code-mirror": "~3.22.0",
-    "coffee-react": "^3.0.1",
+    "coffee-react": "^4.0.0",
     "coffee-reactify": "^3.0.0",
     "envify": "~1.2.1",
     "less-css-stream": "^0.1.2",
-    "react": "^0.13.1",
+    "react": "^0.13.3",
     "through": "^2.3.4"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./build-pages.js"
+    "build": "ulimit -n 2560 && ./build-pages.js",
+    "watch": "WATCH=yes npm run build"
   },
   "repository": {
     "type": "git",

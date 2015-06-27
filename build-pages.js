@@ -23,11 +23,13 @@ function build() {
       .pipe(fs.createWriteStream('./bundles/bundle.js'))
 }
 
-var watcher = chokidar.watch('./src/', {ignored: /[\/\\]\./, persistent: true})
-  .on('change', function (change) {
-    console.log('changed '+change)
-    build()
-  })
+if (process.env.WATCH) {
+  var watcher = chokidar.watch('./src/', {ignored: /[\/\\]\./, persistent: true})
+    .on('change', function (change) {
+      console.log('changed '+change)
+      build()
+    })
+  console.log('watching')
+}
 
-console.log('watching')
 build()

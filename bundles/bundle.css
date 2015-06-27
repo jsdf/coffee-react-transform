@@ -10,6 +10,21 @@ body {
 h1 {
   margin-left: 1%;
 }
+form.compile-toggle {
+  position: absolute;
+  top: 23px;
+  left: 270px;
+}
+form.compile-toggle h4 {
+  margin: 0;
+}
+form.compile-toggle label {
+  cursor: pointer;
+}
+form.compile-toggle input {
+  margin-left: 4px;
+  margin-right: 10px;
+}
 .CodeMirror {
   width: 48%;
   height: 87vh;
