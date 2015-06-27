@@ -7,6 +7,7 @@ var chokidar = require('chokidar')
 function build() {
   var b = browserifyAssets({
     extensions: [".coffee"],
+    debug: !!process.env.SOURCE_MAPS,
     cacheFile: './browserify-cache.json',
   })
     .transform(require('coffee-reactify'))

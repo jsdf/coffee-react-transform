@@ -49517,7 +49517,7 @@ React = require('react');
 
 CodeMirror = require('code-mirror/mode/coffeescript');
 
-CodeMirrorEditor = React.createClass({
+CodeMirrorEditor = React.createClass({displayName: "CodeMirrorEditor",
   getDefaultProps: function() {
     return {
       codeText: ""
@@ -49577,7 +49577,7 @@ CodeMirrorEditor = require('./codemirror-editor');
 
 EXAMPLE_CODE = "Car = React.createClass\n  render: ->\n    <Vehicle locked={isLocked()}  data-colour=\"red\" on>\n      <Parts.FrontSeat />\n      <Parts.BackSeat />\n      <p>Which seat can I take? {@props.seat or 'none'}</p>\n    </Vehicle>";
 
-TryCR = React.createClass({
+TryCR = React.createClass({displayName: "TryCR",
   getInitialState: function() {
     var codeText, urlParsed;
     urlParsed = url.parse(window.location.href, true);
