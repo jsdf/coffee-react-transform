@@ -1,5 +1,7 @@
 # Coffeescript React JSX Transformer
 
+[![Join the chat at https://gitter.im/jsdf/coffee-react-transform](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jsdf/coffee-react-transform?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Provides support for an equivalent of JSX syntax in Coffeescript (called CJSX) so you can write your Facebook React components with the full awesomeness of Coffeescript. [Try it out](https://jsdf.github.io/coffee-react-transform/).
 
 #### Example
