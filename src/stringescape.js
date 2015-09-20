@@ -35,18 +35,5 @@ function encodeChar(inputChar, preserveNewlines) {
     case '>': return "\\x3E";
   }
 
-  if (characterCode > 127) {
-    var c = characterCode;
-    var a4 = c % 16;
-    c = ~~(c/16); 
-    var a3 = c % 16;
-    c = ~~(c/16);
-    var a2 = c % 16;
-    c = ~~(c/16);
-    var a1 = c % 16;
-    
-    return ["\\u", hex[a1], hex[a2], hex[a3], hex[a4]].join('');    
-  } else {
-    return inputChar;
-  }
+  return inputChar;
 }
