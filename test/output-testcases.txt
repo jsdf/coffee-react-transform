@@ -536,7 +536,7 @@ special chars within cjsx are ignored by parser and escaped
 ##input
 <Person> a,/';][' a\''@$%^&˚¬∑˜˚∆å∂¬˚*()*&^%$>><<<< '"''"'''\'\'m' i </Person>
 ##expected
-React.createElement(Person, null, " a,\x2F\';][\' a\\\'\'@$%^\&\u02da\u00ac\u2211\u02dc\u02da\u2206\u00e5\u2202\u00ac\u02da*()*\&^%$\x3E\x3E\x3C\x3C\x3C\x3C \'\"\'\'\"\'\'\'\\\'\\\'m\' i ")
+React.createElement(Person, null, " a,\x2F\';][\' a\\\'\'@$%^\&˚¬∑˜˚∆å∂¬˚*()*\&^%$\x3E\x3E\x3C\x3C\x3C\x3C \'\"\'\'\"\'\'\'\\\'\\\'m\' i ")
 ##end
 
 ##desc
@@ -544,7 +544,7 @@ html entities (name, decimal, hex) within cjsx decoded
 ##input
 <Person>  &&&&euro;  &#8364; &#x20AC;;; </Person>
 ##expected
-React.createElement(Person, null, "  \&\&\&\u20ac  \u20ac \u20ac;; ")
+React.createElement(Person, null, "  \&\&\&€  € €;; ")
 ##end
 
 ##desc
