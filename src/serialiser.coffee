@@ -102,7 +102,7 @@ class Serialiser
 
     joinedAssigns = joinList(assignsWithWhitespace)
 
-    "React.__spread(#{joinList(assignsWithWhitespace)})"
+    "Object.assign(#{joinList(assignsWithWhitespace)})"
 
   serialiseAttributePairs: (children) ->
     # whitespace (particularly newlines) must be maintained

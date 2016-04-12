@@ -103,7 +103,7 @@ extraProps = color: 'red', speed: 'fast'
 which is transformed to:
 ```coffee
 extraProps = color: 'red', speed: 'fast'
-React.createElement("div", React.__spread({"color": "blue"},  extraProps)
+React.createElement("div", Object.assign({"color": "blue"},  extraProps)
 ```
 
 ### Tests
