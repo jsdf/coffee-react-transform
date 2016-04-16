@@ -386,7 +386,7 @@ OPENING_TAG = /// ^
               )
             )
           | \s+[\w-]+  # bare attribute 
-          | \s+\{\.\.\.\s*?[^\s{}]+?\s*?\}  # spread attribute
+          | \s+\{\.\.\.\s*?[^{}]+?\s*?\}  # spread attribute
         )?
       )*?
       \s* # whitespace after attr pair
@@ -418,7 +418,7 @@ TAG_ATTRIBUTES = ///
       )
     )?
   )
-  | (?: \{\.\.\.(\s*?[^\s{}]+?\s*?)\} ) # spread attributes (captured)
+  | (?: \{\.\.\.(\s*?[^{}]+?\s*?)\} ) # spread attributes (captured)
   | ( [\s\n]+ ) # whitespace (captured)
 ///
 
