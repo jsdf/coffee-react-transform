@@ -1,5 +1,9 @@
 # Change Log
 
+## [4.0.0]
+- Replace `React.__spread` with `Object.assign` ([DawidJanczak](https://github.com/DawidJanczak))
+- Allow spaces in spread attributes ([rechtar](https://github.com/rechtar))
+
 ## [3.1.0]
 - Fix literate CoffeeScript/CJSX with single apostrophes in Markdown ([benjie](https://github.com/benjie))
 
