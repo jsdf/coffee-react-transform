@@ -13,7 +13,7 @@ Car = React.createClass
       <Parts.FrontSeat />
       <Parts.BackSeat />
       <p className="seat">Which seat can I take? {@props?.seat or 'none'}</p>
-      {# also, this is a comment }
+      {# also, this is an inline comment}
     </Vehicle>
 ```
 
@@ -75,11 +75,27 @@ npm install -g coffee-react-transform
 ```
 
 #### Version compatibility
-- 3.x - React 0.13.x
+- 4.x - React >=0.14.x
+- 3.x - React >=0.13.x <=0.14.x
 - 2.1.x - React 0.12.1
 - 2.x - React 0.12
 - 1.x - React 0.11.2
 - 0.x - React 0.11 and below
+
+### Spread attributes
+JSX/CJSX 'spread attributes' allow merging in an object of props when creating an element, eg:
+```coffee
+extraProps = color: 'red', speed: 'fast'
+<div color="blue" {...extraProps} />
+```
+which is transformed to:
+```coffee
+extraProps = color: 'red', speed: 'fast'
+React.createElement("div", Object.assign({"color": "blue"},  extraProps)
+```
+
+If you use this syntax in your code, be sure to include a shim for `Object.assign` for browsers/environments which don't yet support it. [object.assign](https://www.npmjs.org/package/object.assign), [core-js](https://github.com/zloirock/core-js) and 
+[es6-shim](https://github.com/es-shims/es6-shim) are some possible choices.
 
 #### UMD bundle for the browser
 If you want to use coffee-react-transform in the browser or under ExecJS or some other environment that doesn't support CommonJS modules, you can use this build provided by [BrowserifyCDN](wzrd.in), which will work as an AMD module or just a plain old script tag:
@@ -94,18 +110,11 @@ If you want to use coffee-react-transform in the browser or under ExecJS or some
 </script>
 ```
 
-### Spread attributes
-A semi-recent addition to JSX (and CJSX) is 'spread attributes' which allow merging an object of props into a component, eg:
-```coffee
-extraProps = color: 'red', speed: 'fast'
-<div color="blue" {... extraProps} />
-```
-which is transformed to:
-```coffee
-extraProps = color: 'red', speed: 'fast'
-React.createElement("div", Object.assign({"color": "blue"},  extraProps)
-```
-
 ### Tests
 
 `npm test` or `cake test` or `cake watch:test`
+
+
+### Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
