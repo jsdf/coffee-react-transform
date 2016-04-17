@@ -2,6 +2,10 @@
 
 Provides support for an equivalent of JSX syntax in Coffeescript (called CJSX) so you can write your Facebook React components with the full awesomeness of Coffeescript. [Try it out](https://jsdf.github.io/coffee-react-transform/).
 
+#### Status
+
+This project is seeking maintainers. If you are interested in becoming a maintainer [create an issue](https://github.com/jsdf/coffee-react-transform/issues). Currently, pull requests will be reviewed and merged, time permitting, but this project is not under active development.
+
 #### Example
 
 car-component.coffee
@@ -82,7 +86,7 @@ npm install -g coffee-react-transform
 - 1.x - React 0.11.2
 - 0.x - React 0.11 and below
 
-### Spread attributes
+#### Spread attributes
 JSX/CJSX 'spread attributes' allow merging in an object of props when creating an element, eg:
 ```coffee
 extraProps = color: 'red', speed: 'fast'
@@ -110,10 +114,10 @@ If you want to use coffee-react-transform in the browser or under ExecJS or some
 </script>
 ```
 
+
 ### Tests
 
 `npm test` or `cake test` or `cake watch:test`
-
 
 ### Changelog
 
