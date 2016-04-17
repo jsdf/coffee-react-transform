@@ -762,3 +762,15 @@ Don't get caught out by apostrophes.
 
     console.log React.createElement(A, null)
 ##end
+
+##desc
+key interpolation
+##input
+{
+  "foo-#{bar}": "quz"
+}
+##expected
+{
+  "foo-#{bar}": "quz"
+}
+##end
