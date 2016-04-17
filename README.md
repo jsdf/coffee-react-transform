@@ -4,7 +4,7 @@ Provides support for an equivalent of JSX syntax in Coffeescript (called CJSX) s
 
 #### Status
 
-This project is seeking maintainers. If you are interested in becoming a maintainer [create an issue](https://github.com/jsdf/coffee-react-transform/issues). Currently, pull requests will be reviewed and merged, time permitting, but this project is not under active development.
+This project is seeking maintainers. If you are interested in becoming a maintainer [create an issue](https://github.com/jsdf/coffee-react-transform/issues). Pull requests will be reviewed and merged (time permitting), but this project is not currently under active development.
 
 #### Example
 
