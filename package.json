@@ -12,7 +12,7 @@
     "browserify-assets": "^1.2.1",
     "chokidar": "^0.8.2",
     "code-mirror": "~3.22.0",
-    "coffee-react": "^4.0.0",
+    "coffee-react": "^5.0.0",
     "coffee-reactify": "^3.0.0",
     "envify": "~1.2.1",
     "less-css-stream": "^0.1.2",
