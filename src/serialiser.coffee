@@ -35,6 +35,8 @@ class Serialiser
 
     unless typeof serialised is 'string' or serialised is null
       throw new Error("serialiser #{node.type} didn\'t return a string")
+      
+    serialised = serialised.replace /[\s\n\\]+\)/g, ")"
 
     serialised
 
