@@ -7,11 +7,26 @@ stringEscape = require './stringescape'
 
 entityDecode = require './entitydecode'
 
-module.exports = exports = serialise = (parseTree) ->
-  new Serialiser().serialise(parseTree)
+module.exports = exports = serialise = (parseTree, opts) ->
+  new Serialiser().serialise(parseTree, opts)
+
+DEFAULT_CREL_EXPR = '`${REACT}.createElement(${ELEMENT}, ${ARGS})`'
+
+makeCreateElementTemplate = (pattern) ->
+  eval """
+    function template(REACT, ELEMENT, ARGS) {
+      return #{pattern};
+    }
+  """
+  template
 
 class Serialiser
-  serialise: (parseTree) ->
+  serialise: (parseTree, @opts = {}) ->
+    @hasJSX = false
+    @jsxExpression = makeCreateElementTemplate(
+      @opts.jsxExpression || DEFAULT_CREL_EXPR
+    )
+
     if parseTree.children and
     parseTree.children.length and
     parseTree.children[0].type is $.CJSX_PRAGMA
@@ -25,7 +40,13 @@ class Serialiser
     else
       @reactObject = 'React'
 
-    @serialiseNode(parseTree)
+    serialised = @serialiseNode(parseTree)
+
+    # hack to add extra stuff at the top if JSX was used
+    if @opts.jsxImport and @hasJSX
+      "#{@opts.jsxImport}\n#{serialised}"
+    else
+      serialised
 
   serialiseNode: (node) ->
     unless nodeSerialisers[node.type]?
@@ -183,7 +204,9 @@ nodeSerialisers =
       element = node.value
     else
       element = '"'+node.value+'"'
-    "#{@reactObject}.createElement(#{element}, #{joinList(serialisedChildren)})"
+
+    @hasJSX = true # hack
+    @jsxExpression(@reactObject, element, joinList(serialisedChildren))
 
   CJSX_COMMENT: (node) ->
     ''

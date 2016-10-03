@@ -1,5 +1,9 @@
 # Change Log
 
+## [5.0.0]
+- final release / deprecation
+- added opts for codemod use
+
 ## [4.0.0]
 - Replace `React.__spread` with `Object.assign` ([DawidJanczak](https://github.com/DawidJanczak))
 - Allow spaces in spread attributes ([rechtar](https://github.com/rechtar))
