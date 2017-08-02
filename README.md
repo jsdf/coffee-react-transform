@@ -1,9 +1,14 @@
 # Coffeescript React JSX Transformer
 
+
+**[CoffeeScript 2 has JSX built in. You should use that instead](http://coffeescript.org/v2/#jsx)**
+
+
 # STATUS: DEPRECATED
 
 This tool is no longer maintained. If you need to transition your codebase from
-it, a codemod is available to do so: [cjsx-codemod](https://github.com/jsdf/cjsx-codemod)
+it, a codemod is available to do so: [cjsx-codemod](https://github.com/jsdf/cjsx-codemod). You can also use [CoffeeScript 2, which has JSX built in.](http://coffeescript.org/v2/#jsx)
+
 
 This project started as a way for me to explore how JSX could fit into
 Coffeescript syntax, as a quickly hacked together prototype. While I never
