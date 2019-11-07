@@ -37,6 +37,6 @@
   "devDependencies": {
     "coffee-script": "^1.9.1",
     "colors": "^0.6.2",
-    "diff": "^1.0.8"
+    "diff": "^4.0.1"
   }
 }
